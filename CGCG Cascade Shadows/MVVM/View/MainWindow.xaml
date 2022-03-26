@@ -1,0 +1,23 @@
+﻿<Window x:Class="FR.CascadeShadows.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:FR.CascadeShadows"
+        xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid Background="AliceBlue">
+        <d:Grid.DataContext>
+            <local:MainViewModel/>
+        </d:Grid.DataContext>
+        <b:Interaction.Triggers>
+            <b:EventTrigger EventName="Loaded" SourceName="renderingTarget">
+                <b:InvokeCommandAction Command="{Binding LoadDirectXTargetCommand}" CommandParameter="{Binding ElementName=renderingTarget}"/>
+            </b:EventTrigger>
+        </b:Interaction.Triggers>
+
+        <!--<Label>Hi</Label>-->
+        <ContentPresenter x:Name="renderingTarget"/>
+    </Grid>
+</Window>
