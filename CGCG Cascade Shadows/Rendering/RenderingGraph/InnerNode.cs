@@ -14,6 +14,9 @@ public class InnerNode : RenderingNode
     public InnerNode(TransitionStateStep transition)
         => this.transition = transition;
 
+    public InnerNode(TransitionAction method)
+        => this.transition = new TransitionMethod(method);
+
     public override bool Alive => children.Count > 0;
 
     public override void Render(DeviceContext1 context)
