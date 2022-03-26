@@ -44,7 +44,7 @@ public static class Devices
     public static DW.Factory DwFactory { get; private set; }
     public static WIC.ImagingFactory WicFactory { get; private set; }
 
-    static FeatureLevel[] direct3DFeatureLevels = new FeatureLevel[]
+    static readonly FeatureLevel[] direct3DFeatureLevels = new FeatureLevel[]
     {
             FeatureLevel.Level_11_1
     };

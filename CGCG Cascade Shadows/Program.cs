@@ -8,6 +8,7 @@ using System;
 using System.IO;
 
 namespace FR.CascadeShadows;
+
 public static class Program
 {
     [STAThread]

@@ -1,10 +1,13 @@
 ﻿using SharpDX;
 using SharpDX.Direct3D11;
-using Format = SharpDX.DXGI.Format;
 using SharpDX.WIC;
+
 using System.IO;
 
+using Format = SharpDX.DXGI.Format;
+
 namespace FR.CascadeShadows;
+
 public static class TextureLoader
 {
     public static ShaderResourceView LoadShaderResourceView(string filename)
@@ -39,14 +42,13 @@ public static class TextureLoader
     {
         BitmapSource bitmapSource = LoadBitmap(wicFactory, stream);
         int stride = bitmapSource.Size.Width * 4;
-        using (var buffer = new DataStream(bitmapSource.Size.Height * stride, true, true))
-        {
-            bitmapSource.CopyPixels(stride, buffer);
-            Texture2DDescription desc = DefaultTexture2DDescription;
-            desc.Width = bitmapSource.Size.Width;
-            desc.Height = bitmapSource.Size.Height;
-            return new Texture2D(device, desc, new DataRectangle(buffer.DataPointer, stride));
-        }
+
+        using var buffer = new DataStream(bitmapSource.Size.Height * stride, true, true);
+        bitmapSource.CopyPixels(stride, buffer);
+        Texture2DDescription desc = DefaultTexture2DDescription;
+        desc.Width = bitmapSource.Size.Width;
+        desc.Height = bitmapSource.Size.Height;
+        return new Texture2D(device, desc, new DataRectangle(buffer.DataPointer, stride));
     }
 
     private static BitmapSource LoadBitmap(ImagingFactory wicFactory, string file)
@@ -73,18 +75,17 @@ public static class TextureLoader
     {
         BitmapSource bitmapSource = LoadBitmap(wicFactory, file);
         int stride = bitmapSource.Size.Width * 4;
-        using (var buffer = new DataStream(bitmapSource.Size.Height * stride, true, true))
-        {
-            bitmapSource.CopyPixels(stride, buffer);
-            Texture2DDescription desc = DefaultTexture2DDescription;
-            desc.Width = bitmapSource.Size.Width;
-            desc.Height = bitmapSource.Size.Height;
-            return new Texture2D(device, desc, new DataRectangle(buffer.DataPointer, stride));
-        }
+
+        using var buffer = new DataStream(bitmapSource.Size.Height * stride, true, true);
+        bitmapSource.CopyPixels(stride, buffer);
+        Texture2DDescription desc = DefaultTexture2DDescription;
+        desc.Width = bitmapSource.Size.Width;
+        desc.Height = bitmapSource.Size.Height;
+        return new Texture2D(device, desc, new DataRectangle(buffer.DataPointer, stride));
     }
 
     public static Texture2DDescription DefaultTexture2DDescription
-        => new Texture2DDescription()
+        => new()
         {
             ArraySize = 1,
             BindFlags = BindFlags.ShaderResource,

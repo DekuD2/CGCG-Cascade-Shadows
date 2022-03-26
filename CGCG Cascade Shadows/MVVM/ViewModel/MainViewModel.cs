@@ -7,10 +7,12 @@ using System.Windows.Controls;
 using System.Windows.Input;
 
 namespace FR.CascadeShadows;
+
 public class MainViewModel : ObservableObject
 {
     public ICommand LoadDirectXTargetCommand { get; init; }
-    CancellationTokenSource loadDirectXTargetCancellationSource = new();
+
+    readonly CancellationTokenSource loadDirectXTargetCancellationSource = new();
 
     DirectXPresenter? presenter;
 

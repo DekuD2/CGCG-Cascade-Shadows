@@ -5,6 +5,7 @@ using System.IO;
 using Path = System.IO.Path;
 
 namespace FR.CascadeShadows.Resources;
+
 public static class ResourceCache
 {
     static readonly Dictionary<(Type type, string path), object> cache = new();

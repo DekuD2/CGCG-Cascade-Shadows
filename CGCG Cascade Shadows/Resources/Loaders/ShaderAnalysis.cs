@@ -5,7 +5,7 @@ using SharpDX.DXGI;
 
 using System;
 
-namespace FR.CascadeShadows;
+namespace FR.CascadeShadows.Resources.Loaders;
 
 public class ShaderAnalysis : IDisposable
 {
@@ -13,14 +13,12 @@ public class ShaderAnalysis : IDisposable
     public int HighestTextueIdx { get; private set; } = -1;
     public int HighestSamplerIdx { get; private set; } = -1;
 
-    //readonly ShaderBytecode byteCode;
     readonly ShaderReflection reflection;
     ShaderDescription Description => reflection.Description;
 
     public ShaderAnalysis(ShaderBytecode byteCode)
     {
-        //this.byteCode = byteCode;
-        reflection = new ShaderReflection(byteCode);
+        this.reflection = new ShaderReflection(byteCode);
 
         for (int i = 0; i < Description.BoundResources; i++)
         {
@@ -45,7 +43,7 @@ public class ShaderAnalysis : IDisposable
         }
     }
 
-    public InputElement[] GetInputElements()
+    public InputElement[] GetInputElements(bool separateSlots = true)
     {
         int inParams = Description.InputParameters;
         InputElement[] inputElements = new InputElement[inParams];
@@ -56,7 +54,7 @@ public class ShaderAnalysis : IDisposable
                 paramDesc.SemanticName,
                 paramDesc.SemanticIndex,
                 GetFormat(paramDesc),
-                i);
+                separateSlots ? i : 0);
         }
         return inputElements;
     }
@@ -77,7 +75,7 @@ public class ShaderAnalysis : IDisposable
                     flags_rg => Format.R32G32_UInt,
                     flags_rgb => Format.R32G32B32_UInt,
                     flags_rgba => Format.R32G32B32A32_UInt,
-                    _ => throw new FormatException("Unrecognized shader input format components!")
+                    _ => throw new FormatException("Unrecognized shader input format components.")
                 },
             RegisterComponentType.SInt32 =>
                 desc.UsageMask switch
@@ -86,7 +84,7 @@ public class ShaderAnalysis : IDisposable
                     flags_rg => Format.R32G32_SInt,
                     flags_rgb => Format.R32G32B32_SInt,
                     flags_rgba => Format.R32G32B32A32_SInt,
-                    _ => throw new FormatException("Unrecognized shader input format components!")
+                    _ => throw new FormatException("Unrecognized shader input format components.")
                 },
             RegisterComponentType.Float32 =>
                 desc.UsageMask switch
@@ -95,39 +93,22 @@ public class ShaderAnalysis : IDisposable
                     flags_rg => Format.R32G32_Float,
                     flags_rgb => Format.R32G32B32_Float,
                     flags_rgba => Format.R32G32B32A32_Float,
-                    _ => throw new FormatException("Unrecognized shader input format components!")
+                    _ => throw new FormatException("Unrecognized shader input format components.")
                 },
-            _ => throw new FormatException("Unrecognized shader input format!")
+            _ => throw new FormatException("Unrecognized shader input format.")
         };
-
-    public (string name, int index)[] GetSemantics()
-    {
-        var inParams = Description.InputParameters;
-        (string, int)[] semantics = new (string, int)[inParams];
-
-        for (int i = 0; i < inParams; i++)
-        {
-            var paramDesc = reflection.GetInputParameterDescription(i);
-            semantics[i] = (paramDesc.SemanticName, paramDesc.SemanticIndex);
-        }
-
-        return semantics;
-    }
 
     public PrimitiveTopology GeometryShaderInputPrimitive
         => reflection.GeometryShaderSInputPrimitive switch
-        {
-            InputPrimitive.Undefined => PrimitiveTopology.Undefined,
-            InputPrimitive.Point => PrimitiveTopology.PointList,
-            InputPrimitive.Line => PrimitiveTopology.LineList,
-            InputPrimitive.Triangle => PrimitiveTopology.TriangleList,
-            InputPrimitive.LineWithAdjacency => PrimitiveTopology.LineListWithAdjacency,
-            InputPrimitive.TriangleWithAdjacency => PrimitiveTopology.TriangleListWithAdjacency,
-            var inputPrim => inputPrim - InputPrimitive.PatchWith1ControlPoints + PrimitiveTopology.PatchListWith1ControlPoints,
-        };
+            {
+                InputPrimitive.Undefined => PrimitiveTopology.Undefined,
+                InputPrimitive.Point => PrimitiveTopology.PointList,
+                InputPrimitive.Line => PrimitiveTopology.LineList,
+                InputPrimitive.Triangle => PrimitiveTopology.TriangleList,
+                InputPrimitive.LineWithAdjacency => PrimitiveTopology.LineListWithAdjacency,
+                InputPrimitive.TriangleWithAdjacency => PrimitiveTopology.TriangleListWithAdjacency,
+                var inputPrim => inputPrim - InputPrimitive.PatchWith1ControlPoints + PrimitiveTopology.PatchListWith1ControlPoints,
+            };
 
-    public void Dispose()
-    {
-        reflection?.Dispose();
-    }
+    public void Dispose() => reflection?.Dispose();
 }

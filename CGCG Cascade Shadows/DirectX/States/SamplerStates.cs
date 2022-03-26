@@ -1,13 +1,14 @@
 ﻿using SharpDX.Direct3D11;
 
 namespace FR.CascadeShadows;
+
 public static class SamplerStates
 {
-    public static SamplerState Default { get; private set; } = new SamplerState(Devices.Device3D, defaultDesc);
-    public static SamplerState Anisotropic { get; private set; } = new SamplerState(Devices.Device3D, anisotropicDesc);
+    public static SamplerState Default { get; private set; } = new SamplerState(Devices.Device3D, DefaultDesc);
+    public static SamplerState Anisotropic { get; private set; } = new SamplerState(Devices.Device3D, AnisotropicDesc);
 
-    static SamplerStateDescription defaultDesc
-        => new SamplerStateDescription()
+    static SamplerStateDescription DefaultDesc
+        => new()
         {
             Filter = Filter.MinMagMipLinear,
             AddressU = TextureAddressMode.Wrap,
@@ -15,8 +16,8 @@ public static class SamplerStates
             AddressW = TextureAddressMode.Wrap
         };
 
-    static SamplerStateDescription anisotropicDesc
-        => new SamplerStateDescription()
+    static SamplerStateDescription AnisotropicDesc
+        => new()
         {
             Filter = Filter.Anisotropic,
             AddressU = TextureAddressMode.Wrap,

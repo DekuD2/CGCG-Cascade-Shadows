@@ -2,6 +2,7 @@
 using SharpDX.Direct3D11;
 
 namespace FR.CascadeShadows.Resources.Shaders.Ps;
+
 public static class Color
 {
     public static readonly PixelShader Shader = ResourceCache.Get<PixelShader>(@"Shaders\Ps\color.hlsl");

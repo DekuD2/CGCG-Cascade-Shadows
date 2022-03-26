@@ -1,6 +1,7 @@
 ﻿using System.IO;
 
 namespace FR.Core;
+
 static class BinaryReaderExtension
 {
     public static T ReadStruct<T>(this BinaryReader br) where T : struct

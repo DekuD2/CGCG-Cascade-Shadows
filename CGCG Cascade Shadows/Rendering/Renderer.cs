@@ -4,6 +4,7 @@ using SharpDX.Direct3D11;
 using static FR.CascadeShadows.Devices;
 
 namespace FR.CascadeShadows.Rendering;
+
 public class Renderer
 {
     // Renderer

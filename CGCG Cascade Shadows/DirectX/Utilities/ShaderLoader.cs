@@ -1,8 +1,7 @@
 ﻿using SharpDX.D3DCompiler;
 
-using System.Diagnostics;
-
 namespace FR.CascadeShadows;
+
 public static class ShaderLoader
 {
     public static CompilationResult CompileFile(string file, string func, string profile)

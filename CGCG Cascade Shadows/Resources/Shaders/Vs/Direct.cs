@@ -4,6 +4,7 @@ using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
 
 namespace FR.CascadeShadows.Resources.Shaders.Vs;
+
 public static class Direct
 {
     public static readonly VertexShader Shader = ResourceCache.Get<VertexShader>(@"Shaders\Vs\direct.hlsl");

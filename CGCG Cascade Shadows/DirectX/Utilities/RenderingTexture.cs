@@ -3,6 +3,7 @@
 using System;
 
 namespace FR.CascadeShadows;
+
 [Flags]
 public enum ShaderUsage
 {

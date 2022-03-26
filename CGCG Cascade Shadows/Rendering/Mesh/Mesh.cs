@@ -1,12 +1,10 @@
-﻿using FR.Core;
-
-using SharpDX;
+﻿using SharpDX;
 
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 
 namespace FR.CascadeShadows.Rendering.Meshes;
+
 public class Mesh
 {
     // Mesh properties

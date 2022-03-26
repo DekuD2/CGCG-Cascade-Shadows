@@ -1,11 +1,9 @@
-﻿using SharpDX.DXGI;
-
-using System;
-using System.Diagnostics;
+﻿using System;
 using System.Runtime.InteropServices;
 using System.Windows.Interop;
 
 namespace FR.CascadeShadows;
+
 public static class WpfDispatcher
 {
     [DllImport("user32.dll")]

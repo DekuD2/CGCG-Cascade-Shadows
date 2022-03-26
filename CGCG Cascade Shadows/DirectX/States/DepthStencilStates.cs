@@ -1,17 +1,18 @@
 ﻿using SharpDX.Direct3D11;
 
 namespace FR.CascadeShadows;
+
 public static class DepthStencilStates
 {
-    public static readonly DepthStencilState Default = new DepthStencilState(Devices.Device3D, DefaultDesc);
-    public static readonly DepthStencilState Ignore = new DepthStencilState(Devices.Device3D, ignoreDesc);
-    public static readonly DepthStencilState Override = new DepthStencilState(Devices.Device3D, overrideDesc);
-    public static readonly DepthStencilState LightVolume = new DepthStencilState(Devices.Device3D, LightVolumeDesc);
-    public static readonly DepthStencilState Clear = new DepthStencilState(Devices.Device3D, ClearDesc);
-    public static readonly DepthStencilState NoWrite = new DepthStencilState(Devices.Device3D, NoWriteDesc);
+    public static readonly DepthStencilState Default = new(Devices.Device3D, DefaultDesc);
+    public static readonly DepthStencilState Ignore = new(Devices.Device3D, IgnoreDesc);
+    public static readonly DepthStencilState Override = new(Devices.Device3D, OverrideDesc);
+    public static readonly DepthStencilState LightVolume = new(Devices.Device3D, LightVolumeDesc);
+    public static readonly DepthStencilState Clear = new(Devices.Device3D, ClearDesc);
+    public static readonly DepthStencilState NoWrite = new(Devices.Device3D, NoWriteDesc);
 
     static DepthStencilStateDescription DefaultDesc
-        => new DepthStencilStateDescription()
+        => new ()
         {
             IsDepthEnabled = true,
             DepthComparison = Comparison.LessEqual,
@@ -19,14 +20,14 @@ public static class DepthStencilStates
             IsStencilEnabled = false,
             StencilReadMask = 0xff,
             StencilWriteMask = 0xff,
-            FrontFace = new DepthStencilOperationDescription()
+            FrontFace =
             {
                 Comparison = Comparison.Always,
                 FailOperation = StencilOperation.Keep,
                 PassOperation = StencilOperation.Keep,
                 DepthFailOperation = StencilOperation.Increment
             },
-            BackFace = new DepthStencilOperationDescription()
+            BackFace =
             {
                 Comparison = Comparison.Always,
                 FailOperation = StencilOperation.Keep,
@@ -35,7 +36,7 @@ public static class DepthStencilStates
             }
         };
 
-    static DepthStencilStateDescription ignoreDesc
+    static DepthStencilStateDescription IgnoreDesc
         => DefaultDesc with
         {
             IsDepthEnabled = false,
@@ -43,7 +44,7 @@ public static class DepthStencilStates
             DepthWriteMask = DepthWriteMask.Zero
         };
 
-    static DepthStencilStateDescription overrideDesc
+    static DepthStencilStateDescription OverrideDesc
         => DefaultDesc with
         {
             DepthComparison = Comparison.Always,

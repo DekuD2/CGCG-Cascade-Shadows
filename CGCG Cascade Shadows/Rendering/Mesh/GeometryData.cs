@@ -1,5 +1,4 @@
-﻿
-using SharpDX;
+﻿using SharpDX;
 using SharpDX.Direct3D11;
 
 using System;
@@ -8,6 +7,7 @@ using System.Linq;
 using Buffer = SharpDX.Direct3D11.Buffer;
 
 namespace FR.CascadeShadows.Rendering.Meshes;
+
 public class GeometryData
 {
     // Vertex properties

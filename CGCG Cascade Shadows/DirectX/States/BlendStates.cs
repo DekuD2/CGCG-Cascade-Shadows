@@ -4,13 +4,13 @@ namespace FR.CascadeShadows;
 
 public static class BlendStates
 {
-    public static BlendState Default { get; private set; } = new BlendState(Devices.Device3D, defaultDesc);
-    public static BlendState Additive { get; private set; } = new BlendState(Devices.Device3D, additiveDesc); // For light
-    public static BlendState Transparency { get; private set; } = new BlendState(Devices.Device3D, transparencyDesc);
-    public static BlendState InvertedTransparency { get; private set; } = new BlendState(Devices.Device3D, transparencyImageDesc);
-    public static BlendState Background { get; private set; } = new BlendState(Devices.Device3D, backgroundDesc);
+    public static BlendState Default { get; private set; } = new BlendState(Devices.Device3D, DefaultDesc);
+    public static BlendState Additive { get; private set; } = new BlendState(Devices.Device3D, AdditiveDesc); // For light
+    public static BlendState Transparency { get; private set; } = new BlendState(Devices.Device3D, TransparencyDesc);
+    public static BlendState InvertedTransparency { get; private set; } = new BlendState(Devices.Device3D, TransparencyImageDesc);
+    public static BlendState Background { get; private set; } = new BlendState(Devices.Device3D, BackgroundDesc);
 
-    static BlendStateDescription defaultDesc
+    static BlendStateDescription DefaultDesc
     {
         get
         {
@@ -42,7 +42,7 @@ public static class BlendStates
         }
     }
 
-    static BlendStateDescription additiveDesc
+    static BlendStateDescription AdditiveDesc
     {
         get
         {
@@ -63,7 +63,7 @@ public static class BlendStates
         }
     }
 
-    static BlendStateDescription transparencyDesc
+    static BlendStateDescription TransparencyDesc
     {
         get
         {
@@ -84,7 +84,7 @@ public static class BlendStates
         }
     }
 
-    static BlendStateDescription transparencyImageDesc
+    static BlendStateDescription TransparencyImageDesc
     {
         get
         {
@@ -105,7 +105,7 @@ public static class BlendStates
         }
     }
 
-    static BlendStateDescription backgroundDesc
+    static BlendStateDescription BackgroundDesc
     {
         get
         {

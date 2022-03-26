@@ -1,21 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Controls;
-using Microsoft.Wpf.Interop.DirectX;
-using System.Windows.Threading;
-using System.Windows;
+﻿using Microsoft.Wpf.Interop.DirectX;
+
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
+
+using System;
+using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
-using System.Diagnostics;
-using SharpDX;
-using System.Windows.Input;
-using System.Windows.Media.Media3D;
 
 namespace FR.CascadeShadows;
+
 public class DirectXPresenter
 {
     // Target
