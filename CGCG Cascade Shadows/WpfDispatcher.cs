@@ -27,8 +27,7 @@ public static class WpfDispatcher
 
     public static void ProcessMessages()
     {
-        MSG msg;
-        while (PeekMessage(out msg, IntPtr.Zero, 0, 0, PM_REMOVE))
+        while (PeekMessage(out MSG msg, IntPtr.Zero, 0, 0, PM_REMOVE))
         {
             if (ComponentDispatcher.RaiseThreadMessage(ref msg) == false)
             {

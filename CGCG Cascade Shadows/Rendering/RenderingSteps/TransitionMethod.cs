@@ -6,7 +6,7 @@ public delegate void TransitionAction(DeviceContext1 context);
 
 public class TransitionMethod : TransitionStateStep
 {
-    TransitionAction transition;
+    readonly TransitionAction transition;
 
     public TransitionMethod(TransitionAction transition)
         => this.transition = transition;

@@ -19,13 +19,13 @@ namespace FR.CascadeShadows;
 public class DirectXPresenter
 {
     // Target
-    Window window;
-    ContentPresenter target;
+    readonly Window window;
+    readonly ContentPresenter target;
 
     // DirectX
-    D3D11Image dxImageSource = new();
+    readonly D3D11Image dxImageSource = new();
+    readonly Image dxImage;
     Texture2D? wpfSurface;
-    Image dxImage;
 
     public DirectXPresenter(ContentPresenter target)
     {
@@ -86,7 +86,7 @@ public class DirectXPresenter
 
     public void Sync(IntPtr surface, bool isNewSurface)
     {
-        Texture2D SurfaceToTexture2D(IntPtr surfacePtr)
+        static Texture2D SurfaceToTexture2D(IntPtr surfacePtr)
         {
             var dxSurface = new Surface(surfacePtr);
             var dxgiResource = dxSurface.QueryInterface<SharpDX.DXGI.Resource>();

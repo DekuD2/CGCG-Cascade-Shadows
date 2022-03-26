@@ -1,4 +1,6 @@
 ﻿using FR.CascadeShadows.Rendering;
+using FR.CascadeShadows.Rendering.Meshes;
+using FR.CascadeShadows.Resources;
 
 using SharpDX;
 
@@ -13,13 +15,14 @@ public static class Program
     {
         Directory.SetCurrentDirectory("Resources");
 
-        MainViewModel viewModel = new MainViewModel();
-        MainWindow window = new MainWindow(viewModel);
+        MainViewModel viewModel = new();
+        MainWindow window = new(viewModel);
 
         window.Show();
 
         var presenter = viewModel.GetDirectXPresenter().Result;
         var renderer = new Renderer();
+        var mesh = ResourceCache.Get<Mesh>(@"Models\ship.obj");
         // presenter.Output
         //var i = renderer.ForwardPass.AttachInstructions();
         //Console.WriteLine(Resources.Shaders.Ps.Color.Hi);

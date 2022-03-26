@@ -5,7 +5,7 @@ namespace FR.CascadeShadows.Rendering;
 
 public class RenderingInstructions : IDisposable
 {
-    InnerNode rootNode;
+    readonly InnerNode rootNode;
     DrawableNode leafNode;
 
     internal RenderingInstructions(InnerNode root, DrawableNode leaf)

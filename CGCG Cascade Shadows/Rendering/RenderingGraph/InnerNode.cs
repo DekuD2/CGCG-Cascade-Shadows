@@ -8,8 +8,8 @@ namespace FR.CascadeShadows.Rendering;
 
 public class InnerNode : RenderingNode
 {
-    List<RenderingNode> children = new();
-    TransitionStateStep transition;
+    readonly List<RenderingNode> children = new();
+    readonly TransitionStateStep transition;
 
     public InnerNode(TransitionStateStep transition)
         => this.transition = transition;

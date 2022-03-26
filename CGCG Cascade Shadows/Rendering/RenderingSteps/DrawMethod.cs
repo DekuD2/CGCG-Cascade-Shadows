@@ -7,7 +7,7 @@ public delegate void DrawAction(DeviceContext1 context);
 public class DrawMethod : DrawStep
 {
     //SceneNode node;
-    DrawAction draw;
+    readonly DrawAction draw;
 
     // DrawAction must be method of a component.
     public DrawMethod(DrawAction draw)

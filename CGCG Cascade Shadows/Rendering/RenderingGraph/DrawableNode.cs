@@ -4,7 +4,7 @@ namespace FR.CascadeShadows.Rendering;
 
 public sealed class DrawableNode : RenderingNode
 {
-    DrawStep obj;
+    readonly DrawStep obj;
 
     public DrawableNode(DrawStep obj)
         => this.obj = obj;

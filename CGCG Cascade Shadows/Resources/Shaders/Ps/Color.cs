@@ -4,8 +4,8 @@ using SharpDX.Direct3D11;
 namespace FR.CascadeShadows.Resources.Shaders.Ps;
 public static class Color
 {
-    public static PixelShader Shader = ResourceCache.Get<PixelShader>(@"Shaders\Ps\color.hlsl");
-    public static Buffer ColorBuffer = new(Devices.Device3D,
+    public static readonly PixelShader Shader = ResourceCache.Get<PixelShader>(@"Shaders\Ps\color.hlsl");
+    public static readonly Buffer ColorBuffer = new(Devices.Device3D,
         sizeof(float) * 4, 
         ResourceUsage.Dynamic, 
         BindFlags.ConstantBuffer,
