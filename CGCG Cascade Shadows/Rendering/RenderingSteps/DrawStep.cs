@@ -7,3 +7,4 @@ public abstract class DrawStep : RenderingStep
     public abstract void Draw(DeviceContext1 context);
     public virtual bool Alive => true;
 }
+

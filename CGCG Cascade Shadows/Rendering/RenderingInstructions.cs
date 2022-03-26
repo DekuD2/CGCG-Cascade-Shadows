@@ -8,8 +8,6 @@ public class RenderingInstructions : IDisposable
     InnerNode rootNode;
     DrawableNode leafNode;
 
-    public RenderingStep[]? Steps { get; private set; }
-
     internal RenderingInstructions(InnerNode root, DrawableNode leaf)
     {
         this.rootNode = root;
