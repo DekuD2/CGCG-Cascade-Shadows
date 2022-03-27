@@ -25,6 +25,7 @@ public class RenderingTexture : IDisposable
     public RenderTargetView? RenderTargetView { get; private set; }
     public DepthStencilView? DepthStencilView { get; private set; }
     public ShaderResourceView? ShaderResourceView { get; private set; }
+    public Texture2DDescription Description => Texture2D?.Description ?? new Texture2DDescription();
 
     public ShaderUsage ShaderInputFlags { get; private set; }
 
@@ -34,12 +35,9 @@ public class RenderingTexture : IDisposable
     public ShaderResourceViewDescription? ShaderResourceViewDesc;
 
     public RenderingTexture(ShaderUsage GenerateViewsFlags)
-    {
-        ShaderInputFlags = GenerateViewsFlags;
-        //new Texture2D(Devices.Device3D, new() { Width = 1, Height = 1 });
-    }
+        => ShaderInputFlags = GenerateViewsFlags;
 
-    public void ResetTexture(Texture2D newTexture)
+    public void ReplaceTexture(Texture2D newTexture)
     {
         Dispose();
 

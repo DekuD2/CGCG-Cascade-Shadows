@@ -1,5 +1,6 @@
 ﻿using SharpDX;
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -18,13 +19,13 @@ public class Mesh
     // Vertex properties
     public Vector3[]? Positions { get; set; }
     public Vector3[]? Normals { get; set; }
-    public Vector2[][] TexCoordChannels { get; set; } = System.Array.Empty<Vector2[]>();
-    public Color[][] ColorChannels { get; set; } = System.Array.Empty<Color[]>();
+    public Vector2[][] TexCoordChannels { get; set; } = Array.Empty<Vector2[]>();
+    public Color[][] ColorChannels { get; set; } = Array.Empty<Color[]>();
     public TangentBase[]? TangentBasis { get; set; }
     public Vector4[]? BoneWeights { get; set; } // Not implemented
 
     // Indices
-    public uint[]? Indices { get; set; }
+    public uint[] Indices { get; set; } = Array.Empty<uint>();
 
     // Counts
     public int VertexCount => Positions?.Length ?? 0;

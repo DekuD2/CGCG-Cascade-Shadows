@@ -9,9 +9,9 @@ namespace FR.CascadeShadows.Rendering;
 public class InnerNode : RenderingNode
 {
     readonly List<RenderingNode> children = new();
-    readonly TransitionStateStep transition;
+    readonly TransitionStep transition;
 
-    public InnerNode(TransitionStateStep transition)
+    public InnerNode(TransitionStep transition)
         => this.transition = transition;
 
     public InnerNode(TransitionAction method)
@@ -29,7 +29,7 @@ public class InnerNode : RenderingNode
         transition.Exit(context);
     }
 
-    internal DrawableNode Add(Span<RenderingStep> steps)
+    internal DrawableNode Add(Span<IRenderingStep> steps)
     {
         if (steps.Length == 1)
         {
@@ -43,8 +43,8 @@ public class InnerNode : RenderingNode
         }
         else if (steps.Length > 0)
         {
-            if (steps[0] is not TransitionStateStep state)
-                throw new ArgumentException($"Non-last rendering steps must inherit from {nameof(TransitionStateStep)}.");
+            if (steps[0] is not TransitionStep state)
+                throw new ArgumentException($"Non-last rendering steps must inherit from {nameof(TransitionStep)}.");
 
             // Existing step -> no need to add a new node, just recursively "browse"
             foreach (var child in children)
@@ -60,5 +60,5 @@ public class InnerNode : RenderingNode
             throw new ArgumentException("The argument can't be an empty array.");
     }
 
-    public static InnerNode Empty => new(TransitionStateStep.Empty);
+    public static InnerNode Empty => new(TransitionStep.Empty);
 }

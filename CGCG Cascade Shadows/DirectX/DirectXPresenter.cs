@@ -71,6 +71,7 @@ public class DirectXPresenter
         dxImageSource.Lock();
 
         // Synchronize surfaces
+        // Is this necessary
         Sync(IntPtr.Zero, false);
         // Redraw
         dxImageSource.AddDirtyRect(new Int32Rect(0, 0, dxImageSource.PixelWidth, dxImageSource.PixelHeight));
@@ -110,7 +111,7 @@ public class DirectXPresenter
             Height = wpfSurface.Description.Height;
             Aspect = Width / (float)Height;
 
-            Output.ResetTexture(new Texture2D(Devices.Device3D, wpfSurface.Description));
+            Output.ReplaceTexture(new Texture2D(Devices.Device3D, wpfSurface.Description));
 
             OutputResized?.Invoke();
         }

@@ -10,6 +10,8 @@ namespace FR.CascadeShadows.Rendering.Meshes;
 
 public class GeometryData
 {
+    public string Name { get; protected set; }
+
     // Vertex properties
     public VertexBufferBinding? Positions { get; protected set; }
     public VertexBufferBinding? Normals { get; protected set; }
@@ -52,6 +54,8 @@ public class GeometryData
     {
         static VertexBufferBinding MakeVbb<T>(T[] ts) where T : struct
             => new(Buffer.Create(Devices.Device3D, BindFlags.VertexBuffer, ts), SharpDX.Utilities.SizeOf<T>(), 0);
+
+        Name = mesh.Name;
 
         VertexCount = mesh.VertexCount;
         IndexCount = mesh.IndexCount;

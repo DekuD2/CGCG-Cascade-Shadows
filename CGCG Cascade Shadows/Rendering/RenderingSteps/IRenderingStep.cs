@@ -1,3 +1,3 @@
 ﻿namespace FR.CascadeShadows.Rendering;
 
-public class RenderingStep { }
+public interface IRenderingStep { }

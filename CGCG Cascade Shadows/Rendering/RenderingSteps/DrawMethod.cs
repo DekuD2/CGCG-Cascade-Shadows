@@ -6,6 +6,9 @@ public delegate void DrawAction(DeviceContext1 context);
 
 public class DrawMethod : DrawStep
 {
+    public static implicit operator DrawMethod(DrawAction draw)
+        => new(draw);
+
     //SceneNode node;
     readonly DrawAction draw;
 
@@ -26,4 +29,14 @@ public class DrawMethod : DrawStep
 
     public override void Draw(DeviceContext1 context)
         => draw.Invoke(context);
+
+    public override bool Equals(object? obj)
+        => obj switch
+        {
+            DrawMethod other => other.draw == draw,
+            _ => false
+        };
+
+    public override int GetHashCode()
+        => draw.GetHashCode();
 }

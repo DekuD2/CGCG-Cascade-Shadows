@@ -14,9 +14,10 @@ public static class ResourceLoader
         foreach (var type in Assembly.GetExecutingAssembly().DefinedTypes)
         {
             var iface = type.GetInterface(nameof(IFileLoader));
-            if (iface == null || type.IsAbstract || iface != typeof(IFileLoader)) continue;
-
-            if (Activator.CreateInstance(type) is not IFileLoader loader) continue;
+            if (iface == null 
+                || type.IsAbstract 
+                || iface != typeof(IFileLoader)
+                || Activator.CreateInstance(type) is not IFileLoader loader) continue;
 
             loaders.Add(loader.ResourceType, loader);
         }

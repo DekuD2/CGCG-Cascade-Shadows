@@ -1,5 +1,6 @@
 ﻿using SharpDX;
 using SharpDX.Direct3D11;
+using SharpDX.DXGI;
 
 using static FR.CascadeShadows.Devices;
 
@@ -29,24 +30,85 @@ public class Renderer
     static DepthStencilView dsv;
     static RenderTargetView rtv;
 
-    public InnerNode ForwardPass = new(c => ForwardPass2.Enter(viewport, dsv, rtv));
+    RenderingTexture target;
+    RenderingTexture depthBuffer = new RenderingTexture(ShaderUsage.DepthStencil | ShaderUsage.ShaderResource);
+
+    int Width => target.Description.Width;
+    int Height => target.Description.Height;
+    float Aspect => Width / Height;
+
+    public Renderer(RenderingTexture target)
+    {
+        this.target = target;
+
+        var depthDsvDesc = new DepthStencilViewDescription()
+        {
+            Dimension = DepthStencilViewDimension.Texture2D,
+            Format = Format.D24_UNorm_S8_UInt,
+        };
+
+        var depthSrvDesc = new ShaderResourceViewDescription()
+        {
+            Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.Texture2D,
+            Format = Format.R24_UNorm_X8_Typeless
+        };
+
+        depthSrvDesc.Texture2D.MipLevels = -1;
+
+        depthBuffer.DepthStencilViewDesc = depthDsvDesc;
+        depthBuffer.ShaderResourceViewDesc = depthSrvDesc;
+
+        Resized();
+
+        ForwardPass = new(c => ForwardPass2.Enter(c, viewport, /*depthBuffer.DepthStencilView!*/null, target.RenderTargetView!));
+    }
+
+    public void Resized()
+    {
+        var depthBufferTexture = new Texture2D(
+            Device3D,
+            new Texture2DDescription()
+            {
+                //Format = Format.D32_Float_S8X24_UInt,
+                Format = Format.R24G8_Typeless,
+                ArraySize = 1,
+                MipLevels = 1,
+                Width = Width,
+                Height = Height,
+                SampleDescription = new SampleDescription(1, 0),
+                BindFlags = BindFlags.DepthStencil | BindFlags.ShaderResource,
+                Usage = ResourceUsage.Default
+            });
+
+        depthBuffer.ReplaceTexture(depthBufferTexture);
+    }
+
+    public void Render()
+    {
+        //Context3D.ClearRenderTargetView(target.RenderTargetView, new(0, 0, 0, 1));
+        viewport = new Viewport(0, 0, Width, Height, minDepth: 0, maxDepth: 1);
+        ForwardPass.Render(Context3D);
+    }
+
+    public InnerNode ForwardPass = new(c => ForwardPass2.Enter(c, viewport, dsv, rtv));
 }
 
 public static class ForwardPass2
 {
-    public static void Enter(Viewport viewport, DepthStencilView dsv, RenderTargetView rtv)
+    public static void Enter(DeviceContext1 context, Viewport viewport, DepthStencilView dsv, RenderTargetView rtv)
     {
-        Context3D.ClearState();
+        context.ClearState();
 
         // Target
-        Context3D.Rasterizer.SetViewport(viewport);
-        Context3D.OutputMerger.SetRenderTargets(dsv, rtv);
+        context.Rasterizer.SetViewport(viewport);
+        context.OutputMerger.SetRenderTargets(dsv, rtv);
 
         // Rasterizer
-        Context3D.Rasterizer.State = RasterizerStates.Default;
+        //context.Rasterizer.State = RasterizerStates.Default;
+        context.Rasterizer.State = RasterizerStates.NoCulling;
 
         // Blending and DepthStencil settings
-        Context3D.OutputMerger.SetBlendState(BlendStates.Transparency);
-        Context3D.OutputMerger.SetDepthStencilState(DepthStencilStates.Default);
+        context.OutputMerger.SetBlendState(BlendStates.Transparency);
+        context.OutputMerger.SetDepthStencilState(DepthStencilStates.Default);
     }
 }

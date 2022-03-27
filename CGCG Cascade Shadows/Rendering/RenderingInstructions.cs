@@ -14,7 +14,7 @@ public class RenderingInstructions : IDisposable
         this.leafNode = leaf;
     }
 
-    public void Change(params RenderingStep[] newSteps)
+    public void Change(params IRenderingStep[] newSteps)
     {
         leafNode.Outdate();
         leafNode = rootNode.Add(newSteps);

@@ -17,6 +17,19 @@ public record VertexShaderInfo(VertexShader Shader,
     Lazy<InputLayout> InputLayoutAggregated,
     MeshInputGetter MeshInputGetter)
 {
+    public VertexBufferBinding[] GetVertexBuffersOrEmpty(GeometryData geometry)
+    {
+        try
+        {
+            return MeshInputGetter(geometry);
+        }
+        catch
+        {
+            Debug.WriteLine($"Mesh '{geometry.Name}' is missing some vertex information required by the material. Returning null.");
+            return Array.Empty<VertexBufferBinding>();
+        }
+    }
+
     public class Loader : FileLoader<VertexShaderInfo>
     {
         public override VertexShaderInfo? Load(string uri)
@@ -27,6 +40,7 @@ public record VertexShaderInfo(VertexShader Shader,
                 return null;
 
             using var analysis = new ShaderAnalysis(result);
+
             var elements = analysis.GetInputElements();
 
             VbbGetter[] getters = GetIndividualGetters(elements);
