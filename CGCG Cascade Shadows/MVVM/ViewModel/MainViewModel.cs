@@ -1,5 +1,7 @@
 ﻿using FR.Core;
 
+using SharpDX;
+
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,6 +13,12 @@ namespace FR.CascadeShadows;
 public class MainViewModel : ObservableObject
 {
     public ICommand LoadDirectXTargetCommand { get; init; }
+    public ICommand MoveCameraCommand { get; init; }
+    public ICommand RotateCameraCommand { get; init; }
+
+    public event Action<Vector3>? MoveCamera;
+    public event Action<Vector2>? RotateCamera;
+
 
     readonly CancellationTokenSource loadDirectXTargetCancellationSource = new();
 
@@ -25,6 +33,18 @@ public class MainViewModel : ObservableObject
 
             presenter = new DirectXPresenter(contentPresenter);
             loadDirectXTargetCancellationSource.Cancel();
+        });
+
+        MoveCameraCommand = new RelayCommand(o =>
+        {
+            if (o is Vector3 vec)
+                MoveCamera?.Invoke(vec);
+        });
+
+        RotateCameraCommand = new RelayCommand(o =>
+        {
+            if (o is Vector2 vec)
+                RotateCamera?.Invoke(vec);
         });
     }
 

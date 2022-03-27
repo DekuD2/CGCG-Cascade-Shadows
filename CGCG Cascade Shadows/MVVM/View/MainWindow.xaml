@@ -18,6 +18,8 @@
         </b:Interaction.Triggers>
 
         <!--<Label>Hi</Label>-->
-        <ContentPresenter x:Name="renderingTarget"/>
+        <ContentPresenter x:Name="renderingTarget"
+                          MouseMove="renderingTarget_MouseMove"
+                          MouseWheel="renderingTarget_MouseWheel"/>
     </Grid>
 </Window>

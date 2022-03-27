@@ -31,7 +31,8 @@ public class Renderer
     static RenderTargetView rtv;
 
     RenderingTexture target;
-    RenderingTexture depthBuffer = new RenderingTexture(ShaderUsage.DepthStencil | ShaderUsage.ShaderResource);
+    RenderingTexture depthBuffer = new(ShaderUsage.DepthStencil | ShaderUsage.ShaderResource);
+    public ControllableCamera Camera = new();
 
     int Width => target.Description.Width;
     int Height => target.Description.Height;
@@ -86,11 +87,29 @@ public class Renderer
     public void Render()
     {
         //Context3D.ClearRenderTargetView(target.RenderTargetView, new(0, 0, 0, 1));
+        ConstantBuffers.UpdateCamera(Context3D, Camera, Aspect);
+
         viewport = new Viewport(0, 0, Width, Height, minDepth: 0, maxDepth: 1);
         ForwardPass.Render(Context3D);
     }
 
-    public InnerNode ForwardPass = new(c => ForwardPass2.Enter(c, viewport, dsv, rtv));
+    //public InnerNode ForwardPass = new(c => ForwardPass2.Enter(c, viewport, dsv, rtv));
+    public InnerNode ForwardPass = new(c =>
+    {
+        c.ClearState();
+
+        // Target
+        c.Rasterizer.SetViewport(viewport);
+        c.OutputMerger.SetRenderTargets(dsv, rtv);
+
+        // Rasterizer
+        //context.Rasterizer.State = RasterizerStates.Default;
+        c.Rasterizer.State = RasterizerStates.NoCulling;
+
+        // Blending and DepthStencil settings
+        c.OutputMerger.SetBlendState(BlendStates.Transparency);
+        c.OutputMerger.SetDepthStencilState(DepthStencilStates.Default);
+    });
 }
 
 public static class ForwardPass2
