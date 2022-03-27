@@ -1,4 +1,5 @@
 ﻿using SharpDX;
+using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
 
 using System;
@@ -8,9 +9,9 @@ using Buffer = SharpDX.Direct3D11.Buffer;
 
 namespace FR.CascadeShadows.Rendering.Meshes;
 
-public class GeometryData
+public partial class GeometryData
 {
-    public string Name { get; protected set; }
+    public string Name { get; protected set; } = "Unnamed";
 
     // Vertex properties
     public VertexBufferBinding? Positions { get; protected set; }
@@ -24,6 +25,9 @@ public class GeometryData
     // Indices
     public Buffer? Indices { get; protected set; }
 
+    // Primitive Topology
+    public PrimitiveTopology PrimitiveTopology { get; private set; } = PrimitiveTopology.TriangleList;
+
     // Counts
     public int VertexCount { get; protected set; } = 0;
     public int IndexCount { get; protected set; } = 0;
@@ -31,6 +35,7 @@ public class GeometryData
     public int ColorChannelCount => ColorChannels.Length;
 
     // Useful shortcuts
+    public bool HasIndices => Indices != null;
     public bool HasPositions => Positions != null;
     public bool HasNormals => Normals != null;
     public bool HasTexCoords => TexCoordChannelCount > 0;
@@ -81,7 +86,8 @@ public class GeometryData
         if (mesh.HasBoneWeights)
             BoneWeights = MakeVbb(mesh.BoneWeights!);
 
-        Indices = Buffer.Create(Devices.Device3D, BindFlags.IndexBuffer, mesh.Indices);
+        if (mesh.Indices.Length > 0)
+            Indices = Buffer.Create(Devices.Device3D, BindFlags.IndexBuffer, mesh.Indices);
 
         if (HasVertices)
         {

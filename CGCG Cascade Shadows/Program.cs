@@ -36,16 +36,13 @@ public static class Program
 
         void Draw(DeviceContext1 context)
         {
-            context.InputAssembler.PrimitiveTopology = SharpDX.Direct3D.PrimitiveTopology.TriangleList;
-            context.InputAssembler.InferVertexBuffers(geometry);
-            context.InputAssembler.InferInputLayout();
-
-            context.Draw(3, 0);
+            context.DrawLastGeometry();
         }
 
         var shipInstr = renderer.ForwardPass.AttachInstructions(
             new TransitionMethod(Resources.Shaders.Vs.Direct.Set),
             new TransitionMethod(Resources.Shaders.Ps.Color.Set),
+            GeometryData.Set(mesh),
             new DrawMethod(Draw));
 
 

@@ -38,5 +38,5 @@ public class DrawMethod : DrawStep
         };
 
     public override int GetHashCode()
-        => draw.GetHashCode();
+        => draw.GetHashCode() + 37;
 }

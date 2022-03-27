@@ -25,5 +25,5 @@ public class TransitionMethod : TransitionStep
         };
 
     public override int GetHashCode()
-        => transition.GetHashCode();
+        => transition.GetHashCode() + 117;
 }

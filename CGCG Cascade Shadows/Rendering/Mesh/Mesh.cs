@@ -1,4 +1,5 @@
 ﻿using SharpDX;
+using SharpDX.Direct3D;
 
 using System;
 using System.Collections.Generic;
@@ -26,6 +27,9 @@ public class Mesh
 
     // Indices
     public uint[] Indices { get; set; } = Array.Empty<uint>();
+
+    // Primitive Topology
+    public PrimitiveTopology PrimitiveTopology { get; set; } = PrimitiveTopology.TriangleList;
 
     // Counts
     public int VertexCount => Positions?.Length ?? 0;
