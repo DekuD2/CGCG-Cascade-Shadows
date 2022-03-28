@@ -41,6 +41,7 @@ public static class Program
             context.DrawLastGeometry();
         }
 
+
         var shipInstr = renderer.ForwardPass.AttachInstructions(
             new TransitionMethod(Resources.Shaders.Vs.Simple.Set),
             new TransitionMethod(Resources.Shaders.Ps.Color.Set),
