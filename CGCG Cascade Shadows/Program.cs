@@ -19,7 +19,7 @@ public static class Program
 
         MainViewModel viewModel = new();
         MainWindow window = new(viewModel);
-
+        
         window.Show();
 
         var presenter = viewModel.GetDirectXPresenter().Result;
