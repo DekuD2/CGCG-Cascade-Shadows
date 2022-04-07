@@ -19,7 +19,7 @@ public static class Program
 
         MainViewModel viewModel = new();
         MainWindow window = new(viewModel);
-        
+
         window.Show();
 
         var presenter = viewModel.GetDirectXPresenter().Result;
@@ -41,18 +41,35 @@ public static class Program
             context.DrawLastGeometry();
         }
 
+        //var shipInstr = DeferredPipeline.ForwardPass.AttachInstructions(
+        //    new TransitionMethod(Resources.Shaders.Vs.Simple.Set),
+        //    new TransitionMethod(Resources.Shaders.Ps.Color.Set),
+        //    GeometryData.Set(ship),
+        //    new DrawMethod(Draw)); 
 
-        var shipInstr = renderer.ForwardPass.AttachInstructions(
-            new TransitionMethod(Resources.Shaders.Vs.Simple.Set),
-            new TransitionMethod(Resources.Shaders.Ps.Color.Set),
+        var shipInstr = DeferredPipeline.SurfacePass.AttachInstructions(
+            new TransitionMethod(Resources.Shaders.ComplexProgram.Set),
+            new Resources.Shaders.ComplexProgram.Material()
+            {
+                Diffuse = ResourceCache.Get<ShaderResourceView>(@"Models\Ship\ship_orange.png")
+            },
             GeometryData.Set(ship),
             new DrawMethod(Draw));
 
+        var lightInstr = DeferredPipeline.LightPass.AttachInstructions(
+            new TransitionMethod(Resources.Shaders.AmbientProgram.Set),
+            new Resources.Shaders.AmbientProgram.Parameters(Color.Green),
+            new DrawMethod(Resources.Shaders.AmbientProgram.Draw));
 
-        //var shipInstr2 = renderer.ForwardPass.AttachInstructions2(
-        //    Draw,
-        //    Resources.Shaders.Vs.Direct.Set,
-        //    Resources.Shaders.Ps.Color.Set);
+        //var lightInstr2 = DeferredPipeline.LightPass.AttachInstructions(
+        //    new TransitionMethod(Resources.Shaders.FullscreenProgram.Set),
+        //    new TransitionMethod(Resources.Shaders.Ps.Color.Set),
+        //    new DrawMethod(Resources.Shaders.FullscreenProgram.Draw));
+
+        //var lightInstr3 = DeferredPipeline.LightPass.AttachInstructions(
+        //    new TransitionMethod(Resources.Shaders.FullscreenProgram.Set),
+        //    new TransitionMethod(Resources.Shaders.Ps.Color.Set),
+        //    new DrawMethod(Resources.Shaders.FullscreenProgram.Draw));
 
         renderer.Camera.Position = new(1, 4, 10);
         viewModel.MoveCamera += x => renderer.Camera.Move(x);
@@ -60,7 +77,7 @@ public static class Program
 
         while (true)
         {
-            Devices.Context3D.ClearRenderTargetView(presenter.Output.RenderTargetView, Color.LightSteelBlue);
+            //Devices.Context3D.ClearRenderTargetView(presenter.Output.RenderTargetView, Color.LightSteelBlue);
 
             renderer.Render();
             //renderer.ForwardPass.Render(Devices.Context3D);

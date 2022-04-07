@@ -53,7 +53,7 @@ public class MainViewModel : ObservableObject
         if (presenter != null)
             return presenter;
 
-        await Task.Delay(5000, loadDirectXTargetCancellationSource.Token);
+        await Task.Delay(5000, loadDirectXTargetCancellationSource.Token).ContinueWith(_ => { });
 
         if (presenter != null)
             return presenter;

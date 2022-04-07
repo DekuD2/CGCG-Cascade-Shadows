@@ -21,14 +21,6 @@ public enum ShaderUsage
 /// </summary>
 public class RenderingTexture : IDisposable
 {
-    public Texture2D Texture2D { get; private set; }
-    public RenderTargetView? RenderTargetView { get; private set; }
-    public DepthStencilView? DepthStencilView { get; private set; }
-    public ShaderResourceView? ShaderResourceView { get; private set; }
-    public Texture2DDescription Description => Texture2D?.Description ?? new Texture2DDescription();
-
-    public ShaderUsage ShaderInputFlags { get; private set; }
-
     // Changes to descriptions are only visible after ResetTexture() is called!
     public RenderTargetViewDescription? RenderTargetViewDesc;
     public DepthStencilViewDescription? DepthStencilViewDesc;
@@ -36,6 +28,15 @@ public class RenderingTexture : IDisposable
 
     public RenderingTexture(ShaderUsage GenerateViewsFlags)
         => ShaderInputFlags = GenerateViewsFlags;
+
+    public event Action? Resized;
+
+    public Texture2D Texture2D { get; private set; }
+    public Texture2DDescription Description => Texture2D?.Description ?? new Texture2DDescription();
+    public RenderTargetView? RenderTargetView { get; private set; }
+    public DepthStencilView? DepthStencilView { get; private set; }
+    public ShaderResourceView? ShaderResourceView { get; private set; }
+    public ShaderUsage ShaderInputFlags { get; private set; }
 
     public void ReplaceTexture(Texture2D newTexture)
     {
@@ -61,6 +62,8 @@ public class RenderingTexture : IDisposable
             ShaderResourceView = ShaderResourceViewDesc == null ?
                 new ShaderResourceView(Devices.Device3D, Texture2D) :
                 new ShaderResourceView(Devices.Device3D, Texture2D, ShaderResourceViewDesc.Value);
+
+        Resized?.Invoke();
     }
 
     public void Dispose()

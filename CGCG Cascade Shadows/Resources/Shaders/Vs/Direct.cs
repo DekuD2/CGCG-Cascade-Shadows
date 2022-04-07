@@ -9,8 +9,8 @@ namespace FR.CascadeShadows.Resources.Shaders.Vs;
 
 public static class Direct
 {
-    public static readonly VertexShaderInfo ShaderInfo = ResourceCache.Get<VertexShaderInfo>(@"Shaders\Vs\direct.hlsl");
+    static readonly VertexShaderInfo ShaderInfo = ResourceCache.Get<VertexShaderInfo>(@"Shaders\Vs\direct.hlsl");
 
-    public static void Set(DeviceContext1 context) 
+    public static void Set(DeviceContext1 context)
         => context.VertexShader.Set(ShaderInfo);
 }

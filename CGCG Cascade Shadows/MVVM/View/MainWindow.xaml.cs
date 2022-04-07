@@ -27,7 +27,7 @@ public partial class MainWindow : Window
 
     // Camera
     private Point? lastMousePos = null;
-    private float cameraForwardSpeed = 0.01f;
+    private float cameraForwardSpeed = -0.01f;
     private float cameraSidewaySpeed = 0.03f;
     private float cameraRotateSpeed = 0.0044f;
 

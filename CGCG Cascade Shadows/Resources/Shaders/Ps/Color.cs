@@ -5,16 +5,15 @@ namespace FR.CascadeShadows.Resources.Shaders.Ps;
 
 public static class Color
 {
-    public static readonly PixelShader Shader = ResourceCache.Get<PixelShader>(@"Shaders\Ps\color.hlsl");
-    public static readonly Buffer ColorBuffer = new(Devices.Device3D,
-        sizeof(float) * 4, 
-        ResourceUsage.Dynamic, 
+    static readonly PixelShader Shader = ResourceCache.Get<PixelShader>(@"Shaders\Ps\color.hlsl");
+
+    static readonly Buffer ColorBuffer = new(Devices.Device3D,
+        sizeof(float) * 4,
+        ResourceUsage.Dynamic,
         BindFlags.ConstantBuffer,
         CpuAccessFlags.Write,
         ResourceOptionFlags.None,
         0);
-
-    public static string Hi => "Hi";
 
     public static void Set(DeviceContext1 context)
     {
