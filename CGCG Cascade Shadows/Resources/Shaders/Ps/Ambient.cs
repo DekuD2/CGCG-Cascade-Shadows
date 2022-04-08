@@ -7,7 +7,7 @@ public static class Ambient
 {
     static readonly PixelShader Shader = ResourceCache.Get<PixelShader>(@"Shaders\Ps\ambient.hlsl");
 
-    static readonly Buffer ColorBuffer = new Buffer(Devices.Device3D, 16, ResourceUsage.Dynamic, BindFlags.ConstantBuffer, CpuAccessFlags.Write, ResourceOptionFlags.None, 0);
+    static readonly Buffer ColorBuffer = new(Devices.Device3D, 16, ResourceUsage.Dynamic, BindFlags.ConstantBuffer, CpuAccessFlags.Write, ResourceOptionFlags.None, 0);
 
     public static void Set(DeviceContext1 context)
     {

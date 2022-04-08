@@ -8,12 +8,24 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid Background="AliceBlue">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="120"/>
+        </Grid.ColumnDefinitions>
         <d:Grid.DataContext>
             <local:MainViewModel/>
         </d:Grid.DataContext>
         <b:Interaction.Triggers>
-            <b:EventTrigger EventName="Loaded" SourceName="renderingTarget">
-                <b:InvokeCommandAction Command="{Binding LoadDirectXTargetCommand}" CommandParameter="{Binding ElementName=renderingTarget}"/>
+            <b:EventTrigger SourceName="renderingTarget"
+                            EventName="Loaded">
+                <b:InvokeCommandAction 
+                    Command="{Binding LoadDirectXTargetCommand}" 
+                    CommandParameter="{Binding ElementName=renderingTarget}"/>
+            </b:EventTrigger>
+            <b:EventTrigger SourceName="outputSelect"
+                            EventName="SelectionChanged">
+                <b:InvokeCommandAction Command="{Binding ChangeOutputCommand}"
+                                       CommandParameter="{Binding ElementName=outputSelect, Path=SelectedIndex}"/>
             </b:EventTrigger>
         </b:Interaction.Triggers>
 
@@ -21,5 +33,21 @@
         <ContentPresenter x:Name="renderingTarget"
                           MouseMove="renderingTarget_MouseMove"
                           MouseWheel="renderingTarget_MouseWheel"/>
+
+        <StackPanel Grid.Column="1"
+                    Orientation="Vertical">
+            <ComboBox x:Name="outputSelect"
+                      Width="120">
+                <ComboBoxItem Content="Default" IsSelected="True"/>
+                <ComboBoxItem Content="Surface position"/>
+                <ComboBoxItem Content="Surface albedo"/>
+                <ComboBoxItem Content="Surface normal"/>
+                <ComboBoxItem Content="Surface emission"/>
+                <ComboBoxItem Content="Surface specular"/>
+                <ComboBoxItem Content="Surface gloss"/>
+                <ComboBoxItem Content="Depth buffer"/>
+            </ComboBox>
+
+        </StackPanel>
     </Grid>
 </Window>

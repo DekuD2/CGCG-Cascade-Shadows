@@ -21,7 +21,7 @@ public class GBuffer
     };
 
     readonly RenderingTexture output;
-    public readonly RenderingTexture[] renderingTextures;
+    readonly RenderingTexture[] renderingTextures;
 
     public GBuffer(RenderingTexture output)
     {

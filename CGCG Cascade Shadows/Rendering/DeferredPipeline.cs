@@ -19,24 +19,26 @@ public class DeferredPipeline : IRenderingPipeline
 {
     public static readonly Color4 ClearColor = new(0, 0, 0, 1);
 
+    public static bool DEBUG_onlySurface = false;
+
     public static readonly InnerNode SurfacePass = new(c =>
     {
         // Rasterizer
-        Devices.Context3D.Rasterizer.State = RasterizerStates.Default;
+        c.Rasterizer.State = RasterizerStates.Default;
 
         // Blending and DepthStencil settings
-        Devices.Context3D.OutputMerger.SetBlendState(BlendStates.Default);
-        Devices.Context3D.OutputMerger.SetDepthStencilState(DepthStencilStates.Default);
+        c.OutputMerger.SetBlendState(BlendStates.Default);
+        c.OutputMerger.SetDepthStencilState(DepthStencilStates.Default);
     });
 
     public static readonly InnerNode LightPass = new(c =>
     {
         // Rasterizer
-        Devices.Context3D.Rasterizer.State = RasterizerStates.Default;
+        c.Rasterizer.State = RasterizerStates.Default;
 
         // Blending and DepthStencil settings
-        Devices.Context3D.OutputMerger.SetBlendState(BlendStates.Additive);
-        Devices.Context3D.OutputMerger.SetDepthStencilState(DepthStencilStates.Ignore);
+        c.OutputMerger.SetBlendState(BlendStates.Additive);
+        c.OutputMerger.SetDepthStencilState(DepthStencilStates.Ignore);
     });
 
     public static readonly InnerNode ForwardPass = new(c =>
@@ -80,6 +82,9 @@ public class DeferredPipeline : IRenderingPipeline
         context.Rasterizer.SetViewport(viewport);
         context.OutputMerger.SetRenderTargets(DepthBuffer.DepthStencilView, Gbuffer.RenderTargetViews.ToArray());
         SurfacePass.Render(Devices.Context3D);
+
+        if (DEBUG_onlySurface)
+            return;
 
         // Light pass
         context.ClearState();

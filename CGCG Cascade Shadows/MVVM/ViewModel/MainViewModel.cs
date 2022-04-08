@@ -15,10 +15,11 @@ public class MainViewModel : ObservableObject
     public ICommand LoadDirectXTargetCommand { get; init; }
     public ICommand MoveCameraCommand { get; init; }
     public ICommand RotateCameraCommand { get; init; }
+    public ICommand ChangeOutputCommand { get; init; }
 
     public event Action<Vector3>? MoveCamera;
     public event Action<Vector2>? RotateCamera;
-
+    public event Action<int>? OutputChanged;
 
     readonly CancellationTokenSource loadDirectXTargetCancellationSource = new();
 
@@ -45,6 +46,12 @@ public class MainViewModel : ObservableObject
         {
             if (o is Vector2 vec)
                 RotateCamera?.Invoke(vec);
+        });
+
+        ChangeOutputCommand = new RelayCommand(o =>
+        {
+            if (o is int idx)
+                OutputChanged?.Invoke(idx);
         });
     }
 

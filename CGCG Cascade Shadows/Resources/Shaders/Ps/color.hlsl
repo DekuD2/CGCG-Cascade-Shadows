@@ -10,6 +10,6 @@ cbuffer ColorBuffer
 
 float4 Main(PsIn input) : SV_Target
 {
-	return float4(1, 0, 1, 1);
-	//return color;
+	//return float4(1, 0, 1, 1);
+	return color;
 }

@@ -1,5 +1,4 @@
 ﻿using SharpDX;
-using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 
 using static FR.CascadeShadows.Devices;
@@ -28,13 +27,13 @@ public class Renderer
 
     public readonly ControllableCamera Camera = new();
 
-    readonly RenderingTexture output;
-    public readonly IRenderingPipeline pipeline;
+    public readonly RenderingTexture output;
+    public readonly IRenderingPipeline Pipeline;
 
     public Renderer(RenderingTexture target)
     {
         output = target;
-        pipeline = new DeferredPipeline(target);
+        Pipeline = new DeferredPipeline(target);
     }
 
     int Width => output.Description.Width;
@@ -47,7 +46,7 @@ public class Renderer
         ConstantBuffers.UpdateCamera(Context3D, Camera, Aspect);
 
         var viewport = new Viewport(0, 0, Width, Height, minDepth: 0, maxDepth: 1);
-        pipeline.Clear(Context3D, viewport);
-        pipeline.Render(Context3D, viewport, Color.Blue);
+        Pipeline.Clear(Context3D, viewport);
+        Pipeline.Render(Context3D, viewport, Color.Blue);
     }
 }

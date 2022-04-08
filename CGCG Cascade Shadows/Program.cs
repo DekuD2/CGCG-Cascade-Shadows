@@ -6,6 +6,8 @@ using SharpDX;
 using SharpDX.Direct3D11;
 
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
@@ -46,8 +48,8 @@ public static class Program
                 Diffuse = ResourceCache.Get<ShaderResourceView>(@"Models\Ship\ship_orange.png"),
                 Normal = ResourceCache.Get<ShaderResourceView>(@"Models\Ship\ship_normal.png"),
                 Emission = ResourceCache.Get<ShaderResourceView>(@"Models\Ship\ship_orange_emission.png"),
-                Specular = ResourceCache.Get<ShaderResourceView>(@"Models\Ship\ship_metallic2.png"),
-                Glossy = ResourceCache.Get<ShaderResourceView>(@"Models\Ship\ship_ior.png"),
+                Specular = ResourceCache.Get<ShaderResourceView>(@"Models\Ship\ship_ior.png"),
+                Glossy = ResourceCache.Get<ShaderResourceView>(@"Models\Ship\ship_metallic2.png"),
             })
             .Then(GeometryData.Set(ship))
             .ThenDraw(c =>
@@ -61,10 +63,10 @@ public static class Program
             .Then(new Resources.Shaders.AmbientProgram.Parameters(new Color(new Vector4(0.3f))))
             .ThenDraw(Resources.Shaders.AmbientProgram.Draw);
 
-        //var pointLightInstr = DeferredPipeline.LightPass
-        //    .Set(Resources.Shaders.PointLightProgram.Set)
-        //    .Then(new Resources.Shaders.PointLightProgram.LightParameters(new Vector3(1, 10, 1), Color.Cyan, c3: 0.05f).Set)
-        //    .ThenDraw(Resources.Shaders.PointLightProgram.Draw);
+        var pointLightInstr = DeferredPipeline.LightPass
+            .Set(Resources.Shaders.PointLightProgram.Set)
+            .Then(new Resources.Shaders.PointLightProgram.LightParameters(new Vector3(4, 2, 1), Color.Orange, c3: 0.05f).Set)
+            .ThenDraw(Resources.Shaders.PointLightProgram.Draw);
 
         var dirLightInstr = DeferredPipeline.LightPass
             .Set(Resources.Shaders.DirectionalLightProgram.Set)
@@ -75,13 +77,33 @@ public static class Program
         //PointLightProgram.SetParameters(context, data);
         //PointLightProgram.Draw(context, data.Position, data.CalculateArea());
 
+        int outputIdx = 0;
+
         renderer.Camera.Position = new(1, 4, 10);
         viewModel.MoveCamera += x => renderer.Camera.Move(x);
         viewModel.RotateCamera += x => renderer.Camera.Rotate(x);
+        viewModel.OutputChanged += i => outputIdx = i;
+
+        Queue<TimeSpan> snapshots = new Queue<TimeSpan>(Enumerable.Repeat(TimeSpan.Zero, 60));
+        Stopwatch stopwatch = new();
+        //int framesInASecond
 
         while (true)
         {
             renderer.Render();
+
+            DeferredPipeline.DEBUG_onlySurface = false;
+            if (outputIdx != 0)
+            {
+                DeferredPipeline.DEBUG_onlySurface = true;
+                RenderUtils.CopyTexture(Devices.Context3D,
+                    outputIdx == 7
+                    ? ((DeferredPipeline)renderer.Pipeline).DepthBuffer.ShaderResourceView
+                    : ((DeferredPipeline)renderer.Pipeline).Gbuffer.ShaderResourceViews.ElementAt(outputIdx - 1),
+                    renderer.output.RenderTargetView!,
+                    renderer.output.Description.Width,
+                    renderer.output.Description.Height);
+            }
 
             WpfDispatcher.ProcessMessages();
             presenter.Present();
