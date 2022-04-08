@@ -12,13 +12,13 @@ public static class AmbientProgram
 {
     public static void Set(DeviceContext1 context)
     {
-        FullscreenProgram.Set(context);
+        Fullscreen.Prepare(context);
         Ps.Ambient.Set(context);
     }
 
     public static void Draw(DeviceContext1 context)
     {
-        FullscreenProgram.Draw(context);
+        Fullscreen.Draw(context);
     }
 
     public class Parameters : TransitionStep

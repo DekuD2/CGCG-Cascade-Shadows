@@ -39,59 +39,41 @@ public static class Program
         mesh.Indices = new uint[] { 0, 1, 2 };
         var geometry = mesh.GeometryData;
 
-        //var shipInstr = DeferredPipeline.ForwardPass.AttachInstructions(
-        //    new TransitionMethod(Resources.Shaders.Vs.Simple.Set),
-        //    new TransitionMethod(Resources.Shaders.Ps.Color.Set),
-        //    GeometryData.Set(ship),
-        //    new DrawMethod(Draw)); 
-
-        var shipInstr = DeferredPipeline.SurfacePass.AttachInstructions(
-            new TransitionMethod(Resources.Shaders.ComplexProgram.Set),
-            new Resources.Shaders.ComplexProgram.Material()
+        var shipInstr2 = DeferredPipeline.SurfacePass
+            .Set(Resources.Shaders.ComplexProgram.Set)
+            .Then(new Resources.Shaders.ComplexProgram.Material()
             {
-                Diffuse = ResourceCache.Get<ShaderResourceView>(@"Models\Ship\ship_orange.png")
-            },
-            GeometryData.Set(ship),
-            new DrawMethod(c =>
+                Diffuse = ResourceCache.Get<ShaderResourceView>(@"Models\Ship\ship_orange.png"),
+                Normal = ResourceCache.Get<ShaderResourceView>(@"Models\Ship\ship_normal.png"),
+                Emission = ResourceCache.Get<ShaderResourceView>(@"Models\Ship\ship_orange_emission.png"),
+                Specular = ResourceCache.Get<ShaderResourceView>(@"Models\Ship\ship_metallic2.png"),
+                Glossy = ResourceCache.Get<ShaderResourceView>(@"Models\Ship\ship_ior.png"),
+            })
+            .Then(GeometryData.Set(ship))
+            .ThenDraw(c =>
             {
-                ConstantBuffers.UpdateTransform(c, Matrix.Scaling(0.1f));
+                ConstantBuffers.UpdateTransform(c, Matrix.Scaling(0.05f));
                 c.DrawLastGeometry();
-            }));
+            });
 
-        var lightInstr = DeferredPipeline.LightPass.AttachInstructions(
-            new TransitionMethod(Resources.Shaders.AmbientProgram.Set),
-            new Resources.Shaders.AmbientProgram.Parameters(Color.Red),
-            new DrawMethod(Resources.Shaders.AmbientProgram.Draw));
+        var ambientInstr = DeferredPipeline.LightPass
+            .Set(Resources.Shaders.AmbientProgram.Set)
+            .Then(new Resources.Shaders.AmbientProgram.Parameters(new Color(new Vector4(0.3f))))
+            .ThenDraw(Resources.Shaders.AmbientProgram.Draw);
 
-        //var shipInstr = DeferredPipeline.SurfacePass.AttachInstructions(
-        //    new TransitionMethod(Resources.Shaders.Vs.Complex.Set),
-        //    new TransitionMethod(Resources.Shaders.Ps.ColorSurface.Set),
-        //    GeometryData.Set(ship),
-        //    new DrawMethod(c =>
-        //    {
-        //        Resources.Shaders.Ps.ColorSurface.SetParameters(c, Color.Cyan);
-        //        ConstantBuffers.UpdateTransform(c, Matrix.Scaling(0.1f));
-        //        c.DrawLastGeometry();
-        //    }));
+        //var pointLightInstr = DeferredPipeline.LightPass
+        //    .Set(Resources.Shaders.PointLightProgram.Set)
+        //    .Then(new Resources.Shaders.PointLightProgram.LightParameters(new Vector3(1, 10, 1), Color.Cyan, c3: 0.05f).Set)
+        //    .ThenDraw(Resources.Shaders.PointLightProgram.Draw);
 
-        //var surfaceTest = DeferredPipeline.SurfacePass.AttachInstructions(
-        //    new TransitionMethod(Resources.Shaders.FullscreenProgram.Set),
-        //    new TransitionMethod(Resources.Shaders.Ps.ColorSurface.Set),
-        //    new DrawMethod(c =>
-        //    {
-        //        Resources.Shaders.Ps.ColorSurface.SetParameters(c, Color.DarkBlue);
-        //        Resources.Shaders.FullscreenProgram.Draw(c);
-        //    }));
+        var dirLightInstr = DeferredPipeline.LightPass
+            .Set(Resources.Shaders.DirectionalLightProgram.Set)
+            .Then(new Resources.Shaders.DirectionalLightProgram.LightParameters(new Vector3(0.1f, -1, -0.1f), Color.Cyan, 0.4f).Set)
+            .ThenDraw(Resources.Shaders.DirectionalLightProgram.Draw);
 
-        //var lightInstr2 = DeferredPipeline.LightPass.AttachInstructions(
-        //    new TransitionMethod(Resources.Shaders.FullscreenProgram.Set),
-        //    new TransitionMethod(Resources.Shaders.Ps.Color.Set),
-        //    new DrawMethod(Resources.Shaders.FullscreenProgram.Draw));
-
-        //var lightInstr3 = DeferredPipeline.LightPass.AttachInstructions(
-        //    new TransitionMethod(Resources.Shaders.FullscreenProgram.Set),
-        //    new TransitionMethod(Resources.Shaders.Ps.Color.Set),
-        //    new DrawMethod(Resources.Shaders.FullscreenProgram.Draw));
+        //data.Position = Transform.World.TranslationVector;
+        //PointLightProgram.SetParameters(context, data);
+        //PointLightProgram.Draw(context, data.Position, data.CalculateArea());
 
         renderer.Camera.Position = new(1, 4, 10);
         viewModel.MoveCamera += x => renderer.Camera.Move(x);
