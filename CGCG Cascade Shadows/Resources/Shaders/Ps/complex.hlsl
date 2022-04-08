@@ -19,19 +19,6 @@ struct PsOut
 	float alpha : SV_Target6;
 };
 
-// TODO: Remove
-cbuffer MaterialBuffer
-{
-	float matSpecular; // direct gloss
-	float3 matDiffuse; // multiplier
-	float3 matEmissive; // direct emissive
-}
-
-cbuffer CameraBuffer
-{
-	float3 camera;
-};
-
 Texture2D diffuseTexture : register(t0);
 Texture2D normalTexture : register(t1);
 Texture2D glossyTexture : register(t2);
@@ -49,7 +36,7 @@ PsOut Main(PsIn input)
 {
 	PsOut output = (PsOut)0;
 
-	output.position = input.worldPosition;
+	output.position = input.worldPosition.xyz;
 	output.alpha = 1;
 	output.albedo = diffuseTexture.Sample(texSampler, input.uv).rgb; // * matDiffuse;
 
@@ -61,8 +48,6 @@ PsOut Main(PsIn input)
 	output.specular = 1 - specularTexture.Sample(texSampler, input.uv).r;
 	output.emission = emissionTexture.Sample(texSampler, input.uv).rgb;
 	output.gloss = glossyTexture.Sample(texSampler, input.uv).r;
-
-	output.albedo = float3(1, 0, 1);
 
 	return output;
 	//return diffuseTexture.Sample(texSampler, input.uv);

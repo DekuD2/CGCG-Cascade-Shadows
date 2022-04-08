@@ -29,7 +29,7 @@ public class Renderer
     public readonly ControllableCamera Camera = new();
 
     readonly RenderingTexture output;
-    readonly IRenderingPipeline pipeline;
+    public readonly IRenderingPipeline pipeline;
 
     public Renderer(RenderingTexture target)
     {

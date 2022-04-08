@@ -7,6 +7,7 @@ using SharpDX.Direct3D11;
 
 using System;
 using System.IO;
+using System.Linq;
 
 namespace FR.CascadeShadows;
 
@@ -15,6 +16,9 @@ public static class Program
     [STAThread]
     public static void Main()
     {
+        // TODO: I commented a lot of complex vertex shader and pixel shader to figure out the
+        // D3D11 ERROR: ID3D11DeviceContext::Draw: Vertex Shader - Pixel Shader linkage error: Signatures between stages are incompatible. The input stage requires Semantic/Index (TEXCOORD,1) as input, but it is not provided by the output stage. [ EXECUTION ERROR #342: DEVICE_SHADER_LINKAGE_SEMANTICNAME_NOT_FOUND]
+
         Directory.SetCurrentDirectory("Resources");
 
         MainViewModel viewModel = new();
@@ -35,12 +39,6 @@ public static class Program
         mesh.Indices = new uint[] { 0, 1, 2 };
         var geometry = mesh.GeometryData;
 
-        void Draw(DeviceContext1 context)
-        {
-            ConstantBuffers.UpdateTransform(context, Matrix.Scaling(0.1f));
-            context.DrawLastGeometry();
-        }
-
         //var shipInstr = DeferredPipeline.ForwardPass.AttachInstructions(
         //    new TransitionMethod(Resources.Shaders.Vs.Simple.Set),
         //    new TransitionMethod(Resources.Shaders.Ps.Color.Set),
@@ -54,12 +52,36 @@ public static class Program
                 Diffuse = ResourceCache.Get<ShaderResourceView>(@"Models\Ship\ship_orange.png")
             },
             GeometryData.Set(ship),
-            new DrawMethod(Draw));
+            new DrawMethod(c =>
+            {
+                ConstantBuffers.UpdateTransform(c, Matrix.Scaling(0.1f));
+                c.DrawLastGeometry();
+            }));
 
         var lightInstr = DeferredPipeline.LightPass.AttachInstructions(
             new TransitionMethod(Resources.Shaders.AmbientProgram.Set),
-            new Resources.Shaders.AmbientProgram.Parameters(Color.Green),
+            new Resources.Shaders.AmbientProgram.Parameters(Color.Red),
             new DrawMethod(Resources.Shaders.AmbientProgram.Draw));
+
+        //var shipInstr = DeferredPipeline.SurfacePass.AttachInstructions(
+        //    new TransitionMethod(Resources.Shaders.Vs.Complex.Set),
+        //    new TransitionMethod(Resources.Shaders.Ps.ColorSurface.Set),
+        //    GeometryData.Set(ship),
+        //    new DrawMethod(c =>
+        //    {
+        //        Resources.Shaders.Ps.ColorSurface.SetParameters(c, Color.Cyan);
+        //        ConstantBuffers.UpdateTransform(c, Matrix.Scaling(0.1f));
+        //        c.DrawLastGeometry();
+        //    }));
+
+        //var surfaceTest = DeferredPipeline.SurfacePass.AttachInstructions(
+        //    new TransitionMethod(Resources.Shaders.FullscreenProgram.Set),
+        //    new TransitionMethod(Resources.Shaders.Ps.ColorSurface.Set),
+        //    new DrawMethod(c =>
+        //    {
+        //        Resources.Shaders.Ps.ColorSurface.SetParameters(c, Color.DarkBlue);
+        //        Resources.Shaders.FullscreenProgram.Draw(c);
+        //    }));
 
         //var lightInstr2 = DeferredPipeline.LightPass.AttachInstructions(
         //    new TransitionMethod(Resources.Shaders.FullscreenProgram.Set),
@@ -77,10 +99,7 @@ public static class Program
 
         while (true)
         {
-            //Devices.Context3D.ClearRenderTargetView(presenter.Output.RenderTargetView, Color.LightSteelBlue);
-
             renderer.Render();
-            //renderer.ForwardPass.Render(Devices.Context3D);
 
             WpfDispatcher.ProcessMessages();
             presenter.Present();

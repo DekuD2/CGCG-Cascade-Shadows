@@ -10,12 +10,12 @@ namespace FR.CascadeShadows.Resources.Shaders.Ps;
 public static class Complex
 {
     public static PixelShader Shader = ResourceCache.Get<PixelShader>(@"Shaders\Ps\complex.hlsl");
-    public static Buffer MaterialBuffer = new(Devices.Device3D, 32, ResourceUsage.Dynamic, BindFlags.ConstantBuffer, CpuAccessFlags.Write, ResourceOptionFlags.None, 0);
+    //public static Buffer MaterialBuffer = new(Devices.Device3D, 32, ResourceUsage.Dynamic, BindFlags.ConstantBuffer, CpuAccessFlags.Write, ResourceOptionFlags.None, 0);
 
     public static void Set(DeviceContext1 context)
     {
         context.PixelShader.Set(Shader);
-        context.PixelShader.SetConstantBuffer(0, MaterialBuffer);
+        //context.PixelShader.SetConstantBuffer(0, MaterialBuffer);
     }
 
     public static void SetParameters(

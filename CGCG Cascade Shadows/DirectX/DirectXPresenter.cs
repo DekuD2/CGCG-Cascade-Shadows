@@ -114,11 +114,13 @@ public class DirectXPresenter
             Output.ReplaceTexture(new Texture2D(Devices.Device3D, wpfSurface.Description));
 
             OutputResized?.Invoke();
+
+            // Try to make a swapchain? (for debug)
         }
         else // Present
         {
             // I kinda don't like that I don't have a swapchain now
-            Devices.Context3D.CopyResource(Output.Texture2D, wpfSurface);
+                Devices.Context3D.CopyResource(Output.Texture2D, wpfSurface);
             // dxImageSource.SetBackBuffer()?
             // I think it is done automatically but I have to make a back buffer or sth?
         }

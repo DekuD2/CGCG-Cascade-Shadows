@@ -43,7 +43,6 @@ public class DeferredPipeline : IRenderingPipeline
     {
         // Rasterizer
         c.Rasterizer.State = RasterizerStates.Default;
-        //c.Rasterizer.State = RasterizerStates.NoCulling;
 
         // Blending and DepthStencil settings
         c.OutputMerger.SetBlendState(BlendStates.Transparency);
@@ -71,7 +70,7 @@ public class DeferredPipeline : IRenderingPipeline
         context.ClearDepthStencilView(DepthBuffer.DepthStencilView, DepthStencilClearFlags.Depth | DepthStencilClearFlags.Stencil, 1f, 0);
 
         // Clear render target
-        context.ClearRenderTargetView(Output.RenderTargetView, Color.BlanchedAlmond/*ClearColor*/);
+        context.ClearRenderTargetView(Output.RenderTargetView, /*Color.BlanchedAlmond*/ClearColor);
     }
 
     public void Render(DeviceContext1 context, Viewport viewport, Color background)
@@ -80,7 +79,6 @@ public class DeferredPipeline : IRenderingPipeline
         context.ClearState();
         context.Rasterizer.SetViewport(viewport);
         context.OutputMerger.SetRenderTargets(DepthBuffer.DepthStencilView, Gbuffer.RenderTargetViews.ToArray());
-        //context.OutputMerger.SetRenderTargets(DepthBuffer.DepthStencilView, Output.RenderTargetView);
         SurfacePass.Render(Devices.Context3D);
 
         // Light pass
@@ -88,8 +86,6 @@ public class DeferredPipeline : IRenderingPipeline
         context.Rasterizer.SetViewport(viewport);
         context.OutputMerger.SetRenderTargets(DepthBuffer.DepthStencilView, Output.RenderTargetView);
         context.PixelShader.SetShaderResources(0, Gbuffer.ShaderResourceViews.ToArray());
-
-        Debugger.Break();
         LightPass.Render(Devices.Context3D);
 
         // Background would be here
@@ -100,6 +96,5 @@ public class DeferredPipeline : IRenderingPipeline
         context.OutputMerger.SetRenderTargets(DepthBuffer.DepthStencilView, Output.RenderTargetView);
         ForwardPass.Render(Devices.Context3D);
 
-        //context.CopyResource(DepthBuffer.Texture, Output.Texture2D);
     }
 }

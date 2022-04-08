@@ -62,12 +62,12 @@ public static class Devices
         // Create 3D device and context
         var creationFlags = DeviceCreationFlags.BgraSupport;
 #if DEBUG
-        //creationFlags |= DeviceCreationFlags.Debug;
+        creationFlags |= DeviceCreationFlags.Debug;
 #endif
         using (var device = new D3D11.Device(DriverType.Hardware, creationFlags, direct3DFeatureLevels))
             Device3D = device.QueryInterfaceOrNull<D3D11.Device1>();
         if (Device3D == null)
-            throw new NotSupportedException("DirectX s11.1 Device1 is not supported!");
+            throw new NotSupportedException("DirectX 11.1 Device1 is not supported!");
         //Context3D = Device3D.ImmediateContext.QueryInterface<D3D11.DeviceContext1>(); // Try d3dDevice.ImmediateContext1
         Context3D = Device3D.ImmediateContext1.QueryInterface<D3D11.DeviceContext4>();
 
@@ -84,6 +84,11 @@ public static class Devices
         using (var dxgiDevice = Device3D.QueryInterface<DXGI.Device>())
             Device2D = new D2D.Device(Factory2D, dxgiDevice);
         Context2D = new D2D.DeviceContext(Device2D, DeviceContextOptions.None);
+
+#if DEBUG
+        Device3D.DebugName = "Main Device3D";
+        Context3D.DebugName = "Main Context3D";
+#endif
     }
 
     public static void Dispose()

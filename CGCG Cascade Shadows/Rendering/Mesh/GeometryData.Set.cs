@@ -27,7 +27,7 @@ public partial class GeometryData
                 cachedBuffers = context.VertexShader.FindVertexBuffers(geometry);
             }
 
-            //context.InputAssembler.SetIndexBuffer(geometry.Indices, SharpDX.DXGI.Format.R32_UInt, 0);
+            ////context.InputAssembler.SetIndexBuffer(geometry.Indices, SharpDX.DXGI.Format.R32_UInt, 0);
             context.InputAssembler.SetIndexBuffer(geometry.Indices, SharpDX.DXGI.Format.R32_UInt, 0);
             context.InputAssembler.SetVertexBuffers(0, cachedBuffers);
             context.InputAssembler.InferInputLayout();

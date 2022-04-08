@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "CGCG Cascade Shadows": {
+      "commandName": "Project",
+      "nativeDebugging": false
+    }
+  }
+}
