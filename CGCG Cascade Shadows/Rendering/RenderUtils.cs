@@ -12,7 +12,8 @@ public static class RenderUtils
         RenderTargetView target,
         int width,
         int height,
-        Color? multiplyer = null)
+        Color? multiplyer = null,
+        float exponent = 1f)
     {
         var viewport = new Viewport(0, 0, width, height, minDepth: 0, maxDepth: 1);
 
@@ -35,7 +36,7 @@ public static class RenderUtils
         context.PixelShader.SetShaderResources(0, source);
 
         // Set params
-        Resources.Shaders.Ps.Copy.SetParameters(context, multiplyer);
+        Resources.Shaders.Ps.Copy.SetParameters(context, multiplyer, exponent);
 
         // Draw
         Resources.Shaders.Fullscreen.Draw(context);

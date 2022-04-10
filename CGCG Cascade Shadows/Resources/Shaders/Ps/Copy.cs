@@ -16,11 +16,11 @@ public static class Copy
         context.PixelShader.SetSampler(0, SamplerStates.Default);
     }
 
-    public static void SetParameters(DeviceContext1 context, SharpDX.Color? multiplier = null)
+    public static void SetParameters(DeviceContext1 context, SharpDX.Color? multiplier = null, float exp = 1f)
     {
         context.MapSubresource(CopyBuffer, MapMode.WriteDiscard, MapFlags.None, out var stream);
         stream.Write(multiplier?.ToColor3() ?? Color3.White);
-        stream.Write(0);
+        stream.Write(exp);
         context.UnmapSubresource(CopyBuffer, 0);
     }
 }

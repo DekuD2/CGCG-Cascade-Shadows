@@ -102,11 +102,40 @@ public static class Program
                     : ((DeferredPipeline)renderer.Pipeline).Gbuffer.ShaderResourceViews.ElementAt(outputIdx - 1),
                     renderer.output.RenderTargetView!,
                     renderer.output.Description.Width,
-                    renderer.output.Description.Height);
+                    renderer.output.Description.Height,
+                    exponent: outputIdx == 7 ? 512f : 1f);
             }
 
             WpfDispatcher.ProcessMessages();
             presenter.Present();
         }
+    }
+}
+
+public class DirectionalLight
+{
+    readonly RenderingInstructions shadowInstructions;
+    readonly RenderingInstructions lightInstructions;
+    Texture2D lightTexture;
+
+    public DirectionalLight()
+    {
+        shadowInstructions = DeferredPipeline.ShadowCastPass
+            .Set(Resources.Shaders.DirectionalLightProgram.Set)
+            .Then(new Resources.Shaders.DirectionalLightProgram.LightParameters(new Vector3(0.1f, -1, -0.1f), Color.Cyan, 0.4f).Set)
+            .ThenDraw(Resources.Shaders.DirectionalLightProgram.Draw);
+
+        lightInstructions = DeferredPipeline.LightPass
+            .Set(Resources.Shaders.DirectionalLightProgram.Set)
+            .Then(new Resources.Shaders.DirectionalLightProgram.LightParameters(new Vector3(0.1f, -1, -0.1f), Color.Cyan, 0.4f).Set)
+            .ThenDraw(Resources.Shaders.DirectionalLightProgram.Draw);
+    }
+
+    public Vector3 Position { get; set; }
+    public Vector2 Size { get; set; }
+
+    void RenderLightTexture()
+    {
+
     }
 }
