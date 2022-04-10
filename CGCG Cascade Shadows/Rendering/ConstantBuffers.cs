@@ -3,18 +3,25 @@ using SharpDX;
 
 namespace FR.CascadeShadows.Rendering;
 
+public enum PassType
+{
+    Normal = 0,
+    Shadows = 1
+}
+
 public static class ConstantBuffers
 {
     static ICamera? currentCamera;
     static Matrix currentViewProjection = Matrix.Identity;
 
-    public static void UpdateCamera(DeviceContext1 context, ICamera camera, float aspect)
+    public static void UpdateCamera(DeviceContext1 context, ICamera camera, float aspect, PassType pass)
     {
         currentCamera = camera;
         currentViewProjection = currentCamera.View * currentCamera.Projection(aspect);
 
         context.MapSubresource(Camera, MapMode.WriteDiscard, MapFlags.None, out var stream);
         stream.Write(camera.Position);
+        stream.Write((int)pass);
         context.UnmapSubresource(Camera, 0);
     }
 

@@ -4,6 +4,7 @@ using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Windows.Controls;
@@ -29,19 +30,6 @@ public class DeferredPipeline : IRenderingPipeline
         // Blending and DepthStencil settings
         c.OutputMerger.SetBlendState(BlendStates.Default);
         c.OutputMerger.SetDepthStencilState(DepthStencilStates.Default);
-    });
-
-    /// <summary>
-    /// This pass doesn't have render output set
-    /// </summary>
-    public static readonly InnerNode ShadowCastPass = new(c =>
-    {
-        // Rasterizer
-        c.Rasterizer.State = RasterizerStates.Default;
-
-        // Blending and DepthStencil settings
-        c.OutputMerger.SetBlendState(BlendStates.Additive);
-        c.OutputMerger.SetDepthStencilState(DepthStencilStates.Ignore);
     });
 
     public static readonly InnerNode LightPass = new(c =>
@@ -94,21 +82,17 @@ public class DeferredPipeline : IRenderingPipeline
         context.ClearState();
         context.Rasterizer.SetViewport(viewport);
         context.OutputMerger.SetRenderTargets(DepthBuffer.DepthStencilView, Gbuffer.RenderTargetViews.ToArray());
-        SurfacePass.Render(Devices.Context3D);
+        SurfacePass.Render(context);
 
         if (DEBUG_onlySurface)
             return;
-
-        // Shadow cast pass
-        context.ClearState();
-        SurfacePass.Render(Devices.Context3D);
 
         // Light pass
         context.ClearState();
         context.Rasterizer.SetViewport(viewport);
         context.OutputMerger.SetRenderTargets(DepthBuffer.DepthStencilView, Output.RenderTargetView);
         context.PixelShader.SetShaderResources(0, Gbuffer.ShaderResourceViews.ToArray());
-        LightPass.Render(Devices.Context3D);
+        LightPass.Render(context);
 
         // Background would be here
 
@@ -116,7 +100,7 @@ public class DeferredPipeline : IRenderingPipeline
         context.ClearState();
         context.Rasterizer.SetViewport(viewport);
         context.OutputMerger.SetRenderTargets(DepthBuffer.DepthStencilView, Output.RenderTargetView);
-        ForwardPass.Render(Devices.Context3D);
+        ForwardPass.Render(context);
 
     }
 }

@@ -4,12 +4,15 @@ using FR.CascadeShadows.Resources;
 
 using SharpDX;
 using SharpDX.Direct3D11;
+using SharpDX.DXGI;
 
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Windows.Controls;
+using System.Windows.Media.Imaging;
 
 namespace FR.CascadeShadows;
 
@@ -68,12 +71,20 @@ public static class Program
             .Then(new Resources.Shaders.PointLightProgram.LightParameters(new Vector3(4, 2, 1), Color.Orange, c3: 0.05f).Set)
             .ThenDraw(Resources.Shaders.PointLightProgram.Draw);
 
-        var dirLightInstr = DeferredPipeline.LightPass
-            .Set(Resources.Shaders.DirectionalLightProgram.Set)
-            .Then(new Resources.Shaders.DirectionalLightProgram.LightParameters(new Vector3(0.1f, -1, -0.1f), Color.Cyan, 0.4f).Set)
-            .ThenDraw(Resources.Shaders.DirectionalLightProgram.Draw);
+        //var dirLightInstr = DeferredPipeline.LightPass
+        //    .Set(Resources.Shaders.DirectionalLightProgram.Set)
+        //    .Then(new Resources.Shaders.DirectionalLightProgram.LightParameters(new Vector3(0.1f, -1, -0.1f), Color.Cyan, 0.4f).Set)
+        //    .ThenDraw(Resources.Shaders.DirectionalLightProgram.Draw);
 
-        //data.Position = Transform.World.TranslationVector;
+        DirectionalLight light = new(512, 512, new(new Vector3(0.01f, -1, -0.01f), Color.Cyan, 0.4f))
+        {
+            Position = new(0, 100, 0),
+            Size = new(30, 30)
+        };
+
+        renderer.Lights.Add(light);
+
+        //data.Position = Transform.World.TranslationVector;W
         //PointLightProgram.SetParameters(context, data);
         //PointLightProgram.Draw(context, data.Position, data.CalculateArea());
 
@@ -84,7 +95,7 @@ public static class Program
         viewModel.RotateCamera += x => renderer.Camera.Rotate(x);
         viewModel.OutputChanged += i => outputIdx = i;
 
-        Queue<TimeSpan> snapshots = new Queue<TimeSpan>(Enumerable.Repeat(TimeSpan.Zero, 60));
+        Queue<TimeSpan> snapshots = new(Enumerable.Repeat(TimeSpan.Zero, 60));
         Stopwatch stopwatch = new();
         //int framesInASecond
 
@@ -93,7 +104,7 @@ public static class Program
             renderer.Render();
 
             DeferredPipeline.DEBUG_onlySurface = false;
-            if (outputIdx != 0)
+            if (outputIdx is > 0 and <= 7)
             {
                 DeferredPipeline.DEBUG_onlySurface = true;
                 RenderUtils.CopyTexture(Devices.Context3D,
@@ -105,6 +116,12 @@ public static class Program
                     renderer.output.Description.Height,
                     exponent: outputIdx == 7 ? 512f : 1f);
             }
+            else if (outputIdx is 8)
+                RenderUtils.CopyTexture(Devices.Context3D,
+                    light.ShaderResourceView,
+                    renderer.output.RenderTargetView!,
+                    renderer.output.Description.Width,
+                    renderer.output.Description.Height);
 
             WpfDispatcher.ProcessMessages();
             presenter.Present();
@@ -112,30 +129,94 @@ public static class Program
     }
 }
 
-public class DirectionalLight
+public abstract class Light
 {
-    readonly RenderingInstructions shadowInstructions;
-    readonly RenderingInstructions lightInstructions;
-    Texture2D lightTexture;
+    public abstract void Setup(DeviceContext1 context);
+}
 
-    public DirectionalLight()
+public partial class DirectionalLight : Light
+{
+    readonly RenderingInstructions lightInstructions;
+    readonly Viewport viewport;
+
+    readonly RenderingTexture lightTexture = new(ShaderUsage.RenderTarget | ShaderUsage.ShaderResource);
+    readonly Resources.Shaders.DirectionalLightProgram.LightParameters lightParams;
+
+    public DirectionalLight(int width, int height, Resources.Shaders.DirectionalLightProgram.LightParameters lightParams)
     {
-        shadowInstructions = DeferredPipeline.ShadowCastPass
-            .Set(Resources.Shaders.DirectionalLightProgram.Set)
-            .Then(new Resources.Shaders.DirectionalLightProgram.LightParameters(new Vector3(0.1f, -1, -0.1f), Color.Cyan, 0.4f).Set)
-            .ThenDraw(Resources.Shaders.DirectionalLightProgram.Draw);
+        viewport = new(0, 0, width, height, 0f, 1f);
+        this.lightParams = lightParams;
 
         lightInstructions = DeferredPipeline.LightPass
             .Set(Resources.Shaders.DirectionalLightProgram.Set)
-            .Then(new Resources.Shaders.DirectionalLightProgram.LightParameters(new Vector3(0.1f, -1, -0.1f), Color.Cyan, 0.4f).Set)
+            .Then(lightParams.Set)
             .ThenDraw(Resources.Shaders.DirectionalLightProgram.Draw);
+
+        lightTexture.RenderTargetViewDesc = new()
+        {
+            Format = Format.R32G32B32A32_Float,
+            Dimension = RenderTargetViewDimension.Texture2D,
+            Texture2D = new RenderTargetViewDescription.Texture2DResource()
+            {
+                MipSlice = 0
+            }
+        };
+
+        lightTexture.ShaderResourceViewDesc = new()
+        {
+            Format = Format.R32G32B32A32_Float,
+            Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.Texture2D,
+            Texture2D = new ShaderResourceViewDescription.Texture2DResource()
+            {
+                MipLevels = 1,
+                MostDetailedMip = 0
+            }
+        };
+
+        lightTexture.ReplaceTexture(new Texture2D(Devices.Device3D, new()
+        {
+            Width = width,
+            Height = height,
+            Format = Format.R32G32B32A32_Float,
+            SampleDescription = new SampleDescription(count: 1, quality: 0),
+            BindFlags = BindFlags.ShaderResource | BindFlags.RenderTarget,
+            MipLevels = 1,
+            ArraySize = 1,
+            Usage = ResourceUsage.Default,
+            CpuAccessFlags = CpuAccessFlags.None,
+            OptionFlags = ResourceOptionFlags.None
+        }));
     }
 
     public Vector3 Position { get; set; }
-    public Vector2 Size { get; set; }
+    public Vector2 Size { get; set; } = new(250, 250);
+    public ShaderResourceView ShaderResourceView => lightTexture.ShaderResourceView!;
 
-    void RenderLightTexture()
+    public override void Setup(DeviceContext1 context)
     {
-
+        ConstantBuffers.UpdateCamera(context, this, Size.X / Size.Y, PassType.Shadows);
+        context.ClearRenderTargetView(lightTexture.RenderTargetView, new Color(0, 1, 0, 0));
+        context.Rasterizer.SetViewport(viewport);
+        context.OutputMerger.SetRenderTargets(lightTexture.RenderTargetView);
     }
+}
+
+public partial class DirectionalLight : ICamera
+{
+    public bool Active => true;
+
+    public float Order => 1;
+
+    public Matrix View => Matrix.LookAtRH(
+                Position,
+                Position + lightParams.Direction,
+                lightParams.Direction.X == 0 && lightParams.Direction.Z == 0 ? Vector3.ForwardRH : Vector3.Up);
+
+    public Color Background => new(0f, 0f, 0f, 0f);
+
+    public RectangleF ViewportRectangle => new(0, 0, 1, 1);
+
+    public Matrix Projection(float aspect)
+        => Matrix.OrthoRH(Size.X, Size.Y, 0.01f, 100f);
+
 }

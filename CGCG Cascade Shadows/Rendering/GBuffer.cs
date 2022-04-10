@@ -30,26 +30,27 @@ public class GBuffer
         renderingTextures = new RenderingTexture[Formats.Length];
         for (int i = 0; i < Formats.Length; i++)
         {
-            renderingTextures[i] = new(ShaderUsage.ShaderResource | ShaderUsage.RenderTarget);
-
-            renderingTextures[i].RenderTargetViewDesc = new RenderTargetViewDescription()
+            renderingTextures[i] = new(ShaderUsage.ShaderResource | ShaderUsage.RenderTarget)
             {
-                Format = Formats[i],
-                Dimension = RenderTargetViewDimension.Texture2D,
-                Texture2D = new RenderTargetViewDescription.Texture2DResource()
+                RenderTargetViewDesc = new()
                 {
-                    MipSlice = 0
-                }
-            };
+                    Format = Formats[i],
+                    Dimension = RenderTargetViewDimension.Texture2D,
+                    Texture2D = new RenderTargetViewDescription.Texture2DResource()
+                    {
+                        MipSlice = 0
+                    }
+                },
 
-            renderingTextures[i].ShaderResourceViewDesc = new ShaderResourceViewDescription()
-            {
-                Format = Formats[i],
-                Dimension = ShaderResourceViewDimension.Texture2D,
-                Texture2D = new ShaderResourceViewDescription.Texture2DResource()
+                ShaderResourceViewDesc = new()
                 {
-                    MipLevels = 1,
-                    MostDetailedMip = 0
+                    Format = Formats[i],
+                    Dimension = ShaderResourceViewDimension.Texture2D,
+                    Texture2D = new ShaderResourceViewDescription.Texture2DResource()
+                    {
+                        MipLevels = 1,
+                        MostDetailedMip = 0
+                    }
                 }
             };
         }

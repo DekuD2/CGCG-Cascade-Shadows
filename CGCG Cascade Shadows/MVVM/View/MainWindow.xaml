@@ -46,6 +46,7 @@
                 <ComboBoxItem Content="Surface specular"/>
                 <ComboBoxItem Content="Surface gloss"/>
                 <ComboBoxItem Content="Depth buffer"/>
+                <ComboBoxItem Content="Light 1 output"/>
             </ComboBox>
 
         </StackPanel>

@@ -12,6 +12,7 @@ static const float ai = 0.2; // ambient intensity
 cbuffer CameraBuffer : register(b0)
 {
     float3 camera;
+    int passType; // = { 0:normal, 1:shadows }
 };
 
 cbuffer LightBuffer : register(b1)

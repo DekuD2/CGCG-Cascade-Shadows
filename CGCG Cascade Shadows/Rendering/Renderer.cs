@@ -1,6 +1,8 @@
 ﻿using SharpDX;
 using SharpDX.DXGI;
 
+using System.Collections.Generic;
+
 using static FR.CascadeShadows.Devices;
 
 namespace FR.CascadeShadows.Rendering;
@@ -30,6 +32,8 @@ public class Renderer
     public readonly RenderingTexture output;
     public readonly IRenderingPipeline Pipeline;
 
+    public readonly List<Light> Lights = new();
+
     public Renderer(RenderingTexture target)
     {
         output = target;
@@ -43,7 +47,17 @@ public class Renderer
     public void Render()
     {
         //Context3D.ClearRenderTargetView(target.RenderTargetView, new(0, 0, 0, 1));
-        ConstantBuffers.UpdateCamera(Context3D, Camera, Aspect);
+
+        // Cast shadows
+        foreach (var light in Lights)
+        {
+            Context3D.ClearState();
+            light.Setup(Context3D);
+            //ConstantBuffers.UpdateCamera(Context3D, Camera, Aspect, PassType.Normal);
+            DeferredPipeline.SurfacePass.Render(Context3D); // HACK: depends on specific pipeline :c
+        }
+
+        ConstantBuffers.UpdateCamera(Context3D, Camera, Aspect, PassType.Normal);
 
         var viewport = new Viewport(0, 0, Width, Height, minDepth: 0, maxDepth: 1);
         Pipeline.Clear(Context3D, viewport);
