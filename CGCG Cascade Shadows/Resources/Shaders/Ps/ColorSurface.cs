@@ -8,7 +8,7 @@ public static class ColorSurface
     static readonly PixelShader Shader = ResourceCache.Get<PixelShader>(@"Shaders\Ps\colorSurface.hlsl");
 
     static readonly Buffer ColorBuffer = new(Devices.Device3D,
-        sizeof(float) * 4,
+        sizeof(float) * 8,
         ResourceUsage.Dynamic,
         BindFlags.ConstantBuffer,
         CpuAccessFlags.Write,
@@ -21,10 +21,13 @@ public static class ColorSurface
         context.PixelShader.SetConstantBuffer(0, ColorBuffer);
     }
 
-    public static void SetParameters(DeviceContext1 context, Color4 color)
+    public static void SetParameters(DeviceContext1 context, Color3 diffuse, Color3 emission, float gloss, float specular)
     {
         context.MapSubresource(ColorBuffer, MapMode.WriteDiscard, MapFlags.None, out var stream);
-        stream.Write(color);
+        stream.Write(diffuse);
+        stream.Write(gloss);
+        stream.Write(emission);
+        stream.Write(specular);
         context.UnmapSubresource(ColorBuffer, 0);
     }
 }

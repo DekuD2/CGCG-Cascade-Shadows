@@ -52,8 +52,8 @@ public class Renderer
         foreach (var light in Lights)
         {
             Context3D.ClearState();
+            ConstantBuffers.UpdateCamera(Context3D, light.Camera, light.Aspect, PassType.Shadows);
             light.Setup(Context3D);
-            //ConstantBuffers.UpdateCamera(Context3D, Camera, Aspect, PassType.Normal);
             DeferredPipeline.SurfacePass.Render(Context3D); // HACK: depends on specific pipeline :c
         }
 

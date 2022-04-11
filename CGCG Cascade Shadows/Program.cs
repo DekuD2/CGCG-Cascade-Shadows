@@ -61,25 +61,50 @@ public static class Program
                 c.DrawLastGeometry();
             });
 
+        var ball = MeshGenerator.GenerateSphere(20, 20);
+
+
+
+        var ballInstr = DeferredPipeline.SurfacePass
+            .Set(Resources.Shaders.SimpleProgram.Set)
+            .Then(GeometryData.Set(ball))
+            .Then(new Resources.Shaders.SimpleProgram.Material()
+            {
+                Diffuse = Color.Green,
+            })
+            .ThenDraw(c =>
+            {
+                ConstantBuffers.UpdateTransform(c, Matrix.Scaling(0.4f) * Matrix.Translation(new(0, 4, 0)));
+                c.DrawLastGeometry();
+            });
+
+        var ballInstr2 = DeferredPipeline.SurfacePass
+            .Set(Resources.Shaders.SimpleProgram.Set)
+            .Then(GeometryData.Set(ball))
+            .Then(new Resources.Shaders.SimpleProgram.Material()
+            {
+                Diffuse = Color.Blue,
+            })
+            .ThenDraw(c =>
+            {
+                ConstantBuffers.UpdateTransform(c, Matrix.Scaling(0.4f) * Matrix.Translation(new(3, 2, 1)));
+                c.DrawLastGeometry();
+            });
+
         var ambientInstr = DeferredPipeline.LightPass
             .Set(Resources.Shaders.AmbientProgram.Set)
             .Then(new Resources.Shaders.AmbientProgram.Parameters(new Color(new Vector4(0.3f))))
             .ThenDraw(Resources.Shaders.AmbientProgram.Draw);
 
-        var pointLightInstr = DeferredPipeline.LightPass
-            .Set(Resources.Shaders.PointLightProgram.Set)
-            .Then(new Resources.Shaders.PointLightProgram.LightParameters(new Vector3(4, 2, 1), Color.Orange, c3: 0.05f).Set)
-            .ThenDraw(Resources.Shaders.PointLightProgram.Draw);
-
-        //var dirLightInstr = DeferredPipeline.LightPass
-        //    .Set(Resources.Shaders.DirectionalLightProgram.Set)
-        //    .Then(new Resources.Shaders.DirectionalLightProgram.LightParameters(new Vector3(0.1f, -1, -0.1f), Color.Cyan, 0.4f).Set)
-        //    .ThenDraw(Resources.Shaders.DirectionalLightProgram.Draw);
+        //var pointLightInstr = DeferredPipeline.LightPass
+        //    .Set(Resources.Shaders.PointLightProgram.Set)
+        //    .Then(new Resources.Shaders.PointLightProgram.LightParameters(new Vector3(4, 2, 1), Color.Orange, c3: 0.05f).Set)
+        //    .ThenDraw(Resources.Shaders.PointLightProgram.Draw);;
 
         DirectionalLight light = new(512, 512, new(new Vector3(0.01f, -1, -0.01f), Color.Cyan, 0.4f))
         {
             Position = new(0, 100, 0),
-            Size = new(30, 30)
+            Size = new(300, 300)
         };
 
         renderer.Lights.Add(light);
@@ -99,8 +124,13 @@ public static class Program
         Stopwatch stopwatch = new();
         //int framesInASecond
 
+        var timer = Stopwatch.StartNew();
+
         while (true)
         {
+            //light.lightParams.Direction.Z = (float)Math.Sin(timer.ElapsedMilliseconds / 1000f) * 5f;
+            //light.lightParams.Direction.X = (float)Math.Cos(timer.ElapsedMilliseconds / 1000f) * 5f;
+
             renderer.Render();
 
             DeferredPipeline.DEBUG_onlySurface = false;
@@ -132,6 +162,8 @@ public static class Program
 public abstract class Light
 {
     public abstract void Setup(DeviceContext1 context);
+    public abstract float Aspect { get; }
+    public abstract ICamera Camera { get; }
 }
 
 public partial class DirectionalLight : Light
@@ -140,16 +172,22 @@ public partial class DirectionalLight : Light
     readonly Viewport viewport;
 
     readonly RenderingTexture lightTexture = new(ShaderUsage.RenderTarget | ShaderUsage.ShaderResource);
-    readonly Resources.Shaders.DirectionalLightProgram.LightParameters lightParams;
+    public Resources.Shaders.DirectionalLightProgram.LightParameters lightParams;
 
-    public DirectionalLight(int width, int height, Resources.Shaders.DirectionalLightProgram.LightParameters lightParams)
+    public DirectionalLight(
+        int texWidth, int texHeight,
+        Resources.Shaders.DirectionalLightProgram.LightParameters lightParams)
     {
-        viewport = new(0, 0, width, height, 0f, 1f);
+        viewport = new(0, 0, texWidth, texHeight, 0f, 1f);
         this.lightParams = lightParams;
 
         lightInstructions = DeferredPipeline.LightPass
             .Set(Resources.Shaders.DirectionalLightProgram.Set)
-            .Then(lightParams.Set)
+            .Then(c =>
+            {
+                this.lightParams.Set(c);
+                c.PixelShader.SetShaderResource(10, lightTexture.ShaderResourceView);
+            })
             .ThenDraw(Resources.Shaders.DirectionalLightProgram.Draw);
 
         lightTexture.RenderTargetViewDesc = new()
@@ -175,8 +213,8 @@ public partial class DirectionalLight : Light
 
         lightTexture.ReplaceTexture(new Texture2D(Devices.Device3D, new()
         {
-            Width = width,
-            Height = height,
+            Width = texWidth,
+            Height = texHeight,
             Format = Format.R32G32B32A32_Float,
             SampleDescription = new SampleDescription(count: 1, quality: 0),
             BindFlags = BindFlags.ShaderResource | BindFlags.RenderTarget,
@@ -192,9 +230,14 @@ public partial class DirectionalLight : Light
     public Vector2 Size { get; set; } = new(250, 250);
     public ShaderResourceView ShaderResourceView => lightTexture.ShaderResourceView!;
 
+    public override float Aspect => Size.X / Size.Y;
+    public override ICamera Camera => this;
+
     public override void Setup(DeviceContext1 context)
     {
-        ConstantBuffers.UpdateCamera(context, this, Size.X / Size.Y, PassType.Shadows);
+        // TEMP
+        lightParams.SetShadowCast(ref lightParams, Position, Size.X, Size.Y);
+
         context.ClearRenderTargetView(lightTexture.RenderTargetView, new Color(0, 1, 0, 0));
         context.Rasterizer.SetViewport(viewport);
         context.OutputMerger.SetRenderTargets(lightTexture.RenderTargetView);
