@@ -22,9 +22,7 @@ cbuffer LightBuffer : register(b1)
 	float3 lightColor;
 	float intensity;
 
-	float3 shadowCastPos;
-	float shadowCastWidth;
-	float shadowCastHeight;
+	matrix lightViewProjection;
 };
 
 Texture2D positionTexture : register(t0);
@@ -62,33 +60,53 @@ float4 Main(PsIn input) : SV_Target
 	// project that with dot product or sum? (we should know the camera up TODO: exception when facing directly downward)
 	// so project light direction onto up and normalize it
 
-	// plane: a*x + b*y + c*z = d
-	// ray:
-	//  x = px + rx*k
-	//  y = py + ry*k
-	//  z = rz + rz*k
-	// a*px + a*rx*k + b*py + b*ry*k + c*py + c*ry*k - d = 0
-	// a.p + a.r * k = d
+	// Just take the world position and multiply it by the light's worldposition
+	// Then divide xy by w and those are the uv texture coordinates
+	// (depth = z / w)
+	//  - depth must be > 0, otherwise it's behind the light (only for point light tho)
 
 	// WAIT WE DON'T NEED THIS
 	// We just need to project it onto a plane
 
-	float3 rightDir = normalize(cross(float3(0, 1, 0), lightDir));
-	// Idk if I need to normalize the second cross product
-	float3 upDir = normalize(dot(rightDir, lightDir));
+	//float3 rightDir = normalize(cross(float3(0, 1, 0), lightDir));
+	//float3 upDir = normalize(cross(rightDir, lightDir));
 
-	float3 relative = position - shadowCastPos;
-	float right = dot(rightDir, relative);
-	float up = dot(upDir, relative);
+	//float3 relative = position - shadowCastPos;
+	//float right = dot(rightDir, relative);
+	//float up = dot(upDir, relative);
 
-	float2 shadowUV = float2(right / shadowCastWidth + 0.5, up / shadowCastHeight + 0.5);
-	float3 shadowWorld = shadowTexture.Sample(texSampler, shadowUV).rgb;
+	//float2 shadowUV = float2(right / shadowCastWidth + 0.5, up / shadowCastHeight + 0.5);
+	//shadowUV = input.uv;
+	//float3 shadowWorld = shadowTexture.Sample(texSampler, shadowUV).rgb;
 
-	return float4(shadowUV.x, shadowUV.y, 0, 1);
-	return float4(shadowWorld, 1);
+	float4 lightSpacePos = mul(float4(position, 1), lightViewProjection);
+	if (lightSpacePos.w == 0)
+		lightSpacePos.w = 1.0;
+	float2 shadowMapCoords = 0.5 * lightSpacePos.xy / lightSpacePos.w + float2(-0.5, 0.5);
 
-	if (!castShadow || length(shadowWorld - position) > 2.0) // or not in shadow
+	shadowMapCoords.x = 0.5 + (lightSpacePos.x / lightSpacePos.w * 0.5);
+	shadowMapCoords.y = 0.5 - (lightSpacePos.y / lightSpacePos.w * 0.5);
+	float depth = lightSpacePos.z / lightSpacePos.w;
+
+	// if (shadowMapCoords.x > 1 || shadowMapCoords.x < 0 || shadowMapCoords.y > 1 || shadowMapCoords.y < 0)
+	// 	return float4(0, 0, 0, 0);
+
+	// shadowMapCoords = float2(0.5, 0.5);
+
+
+	float lightMapDepth = lightSpacePos.z / lightSpacePos.w;
+
+	float depthDiff = depth - shadowTexture.Sample(texSampler, shadowMapCoords).r;
+
+	return float4(lightSpacePos.xyz, 1);
+	// float cmp = shadowTexture.SampleCmpLevelZero(texSampler, shadowMapCoords, depth + 0.01);
+
+	if (!castShadow || depthDiff > 0.1) // or not in shadow
 	{
+		//return float4(shadowMapCoords, 0, 1);
+		//return float4(shadowUV.x * 255, shadowUV.y * 255, 0, 1);
+		//return float4(shadowWorld, 1);
+
 		normal = normalize(normal);
 
 		float3 toLight = -normalize(lightDir);

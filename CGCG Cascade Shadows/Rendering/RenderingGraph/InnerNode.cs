@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using FR.Core;
+using System.Linq;
 
 namespace FR.CascadeShadows.Rendering;
 
@@ -21,6 +22,8 @@ public class InnerNode : RenderingNode
 
     public override void Render(DeviceContext1 context)
     {
+        if (!Show) return;
+
         transition.Enter(context);
 
         foreach (var child in children.FastFilterAndRemove(x => x.Alive))
@@ -61,4 +64,6 @@ public class InnerNode : RenderingNode
     }
 
     public static InnerNode Empty => new(TransitionStep.Empty);
+
+    public override bool Show => transition.Show && children.Any(x => x.Show);
 }

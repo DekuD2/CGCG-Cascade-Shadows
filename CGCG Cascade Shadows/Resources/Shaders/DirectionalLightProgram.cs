@@ -9,8 +9,15 @@ namespace FR.CascadeShadows.Resources.Shaders;
 
 public static class DirectionalLightProgram
 {
-    static readonly PixelShader PixelShader = ResourceCache.Get<PixelShader>(@"Shaders\Ps\directionalLight.hlsl");
+    static PixelShader PixelShader = ResourceCache.Get<PixelShader>(@"Shaders\Ps\directionalLight.hlsl");
     public static readonly Buffer LightBuffer = new(Devices.Device3D, 64, ResourceUsage.Dynamic, BindFlags.ConstantBuffer, CpuAccessFlags.Write, ResourceOptionFlags.None, 0);
+
+    public static void Recompile()
+    {
+        var newShader = ResourceCache.Get<PixelShader>(@"Shaders\Ps\directionalLight.hlsl", true);
+        if (newShader != null)
+            PixelShader = newShader;
+    }
 
     public static void Set(DeviceContext1 context)
     {
@@ -37,9 +44,7 @@ public static class DirectionalLightProgram
         private byte _p2 = 0;
         public Color3 Color;
         public float Intensity;
-        public Color3 ShadowCastPos = Vector3.Zero;
-        public float ShadowCastWidth = 0;
-        public float ShadowCastHeight = 0;
+        private Matrix LightViewProjection = Matrix.Identity;
 
         public LightParameters(
             Vector3 direction,
@@ -51,12 +56,10 @@ public static class DirectionalLightProgram
             this.Intensity = intensity;
         }
 
-        public void SetShadowCast(ref LightParameters @this, Vector3 position, float width, float height)
+        public void SetShadowCast(ref LightParameters @this, Matrix lightViewProjection)
         {
             @this.CastShadow = true;
-            @this.ShadowCastPos = position;
-            @this.ShadowCastWidth = width;
-            @this.ShadowCastHeight = height;
+            @this.LightViewProjection = Matrix.Transpose(lightViewProjection);
         }
 
         public void Set(DeviceContext1 context)

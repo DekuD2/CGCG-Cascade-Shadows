@@ -8,5 +8,6 @@ public abstract class DrawStep : IRenderingStep
 {
     public abstract void Draw(DeviceContext1 context);
     public virtual bool Alive => true;
+    public virtual bool Show => true;
 }
 

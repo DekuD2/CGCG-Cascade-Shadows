@@ -18,12 +18,14 @@ namespace FR.CascadeShadows;
 
 public static class Program
 {
+    static TransitionGate PointLightGate = new();
+    static TransitionGate AmbientLightGate = new();
+
     [STAThread]
     public static void Main()
     {
         // TODO: I commented a lot of complex vertex shader and pixel shader to figure out the
         // D3D11 ERROR: ID3D11DeviceContext::Draw: Vertex Shader - Pixel Shader linkage error: Signatures between stages are incompatible. The input stage requires Semantic/Index (TEXCOORD,1) as input, but it is not provided by the output stage. [ EXECUTION ERROR #342: DEVICE_SHADER_LINKAGE_SEMANTICNAME_NOT_FOUND]
-
         Directory.SetCurrentDirectory("Resources");
 
         MainViewModel viewModel = new();
@@ -63,7 +65,7 @@ public static class Program
 
         var ball = MeshGenerator.GenerateSphere(20, 20);
 
-
+        Vector3 ballPos = new(0, 4, 0);
 
         var ballInstr = DeferredPipeline.SurfacePass
             .Set(Resources.Shaders.SimpleProgram.Set)
@@ -71,10 +73,28 @@ public static class Program
             .Then(new Resources.Shaders.SimpleProgram.Material()
             {
                 Diffuse = Color.Green,
+                Gloss = 0.7f,
+                SpecularPower = 128f
             })
             .ThenDraw(c =>
             {
-                ConstantBuffers.UpdateTransform(c, Matrix.Scaling(0.4f) * Matrix.Translation(new(0, 4, 0)));
+                ConstantBuffers.UpdateTransform(c, Matrix.Scaling(0.4f) * Matrix.Translation(ballPos));
+                c.DrawLastGeometry();
+            });
+
+        var quad = MeshGenerator.GenerateQuad();
+        var quadInstr = DeferredPipeline.SurfacePass
+            .Set(Resources.Shaders.SimpleProgram.Set)
+            .Then(GeometryData.Set(quad))
+            .Then(new Resources.Shaders.SimpleProgram.Material()
+            {
+                Diffuse = Color.White,
+                Gloss = 0.2f,
+                SpecularPower = 0.5f
+            })
+            .ThenDraw(c =>
+            {
+                ConstantBuffers.UpdateTransform(c, Matrix.RotationX(-MathF.PI * 0.5f) * Matrix.Scaling(10f) * Matrix.Translation(0, -3, 0));
                 c.DrawLastGeometry();
             });
 
@@ -84,6 +104,8 @@ public static class Program
             .Then(new Resources.Shaders.SimpleProgram.Material()
             {
                 Diffuse = Color.Blue,
+                Gloss = 0.3f,
+                SpecularPower = 1f
             })
             .ThenDraw(c =>
             {
@@ -93,18 +115,20 @@ public static class Program
 
         var ambientInstr = DeferredPipeline.LightPass
             .Set(Resources.Shaders.AmbientProgram.Set)
-            .Then(new Resources.Shaders.AmbientProgram.Parameters(new Color(new Vector4(0.3f))))
+            .Then(new Resources.Shaders.AmbientProgram.Parameters(new Color(new Vector4(0.1f))))
+            .Then(AmbientLightGate)
             .ThenDraw(Resources.Shaders.AmbientProgram.Draw);
 
-        //var pointLightInstr = DeferredPipeline.LightPass
-        //    .Set(Resources.Shaders.PointLightProgram.Set)
-        //    .Then(new Resources.Shaders.PointLightProgram.LightParameters(new Vector3(4, 2, 1), Color.Orange, c3: 0.05f).Set)
-        //    .ThenDraw(Resources.Shaders.PointLightProgram.Draw);;
+        var pointLightInstr = DeferredPipeline.LightPass
+            .Set(Resources.Shaders.PointLightProgram.Set)
+            .Then(new Resources.Shaders.PointLightProgram.LightParameters(new Vector3(4, 2, 1), Color.Orange, c3: 0.05f).Set)
+            .Then(PointLightGate)
+            .ThenDraw(Resources.Shaders.PointLightProgram.Draw);
 
-        DirectionalLight light = new(512, 512, new(new Vector3(0.01f, -1, -0.01f), Color.Cyan, 0.4f))
+        DirectionalLight light = new(512, 512, new(new Vector3(0.01f, -1, -0.01f), Color.White, 0.4f))
         {
             Position = new(0, 100, 0),
-            Size = new(300, 300)
+            Size = new(30, 30)
         };
 
         renderer.Lights.Add(light);
@@ -119,6 +143,28 @@ public static class Program
         viewModel.MoveCamera += x => renderer.Camera.Move(x);
         viewModel.RotateCamera += x => renderer.Camera.Rotate(x);
         viewModel.OutputChanged += i => outputIdx = i;
+        viewModel.ReloadShader += s =>
+        {
+            try
+            {
+                Resources.Shaders.DirectionalLightProgram.Recompile();
+            }
+            catch (Exception e)
+            {
+                viewModel.ShowError(e.Message);
+            }
+        };
+        viewModel.Toggle += (name, show) =>
+        {
+            var gate = name switch
+            {
+                "ambient light" => AmbientLightGate,
+                "point light" => PointLightGate,
+                "directional light" => light.Gate,
+                _ => throw new Exception($"Unknown toggle ({name})")
+            };
+            gate.ShowNode = show;
+        };
 
         Queue<TimeSpan> snapshots = new(Enumerable.Repeat(TimeSpan.Zero, 60));
         Stopwatch stopwatch = new();
@@ -128,8 +174,10 @@ public static class Program
 
         while (true)
         {
-            //light.lightParams.Direction.Z = (float)Math.Sin(timer.ElapsedMilliseconds / 1000f) * 5f;
-            //light.lightParams.Direction.X = (float)Math.Cos(timer.ElapsedMilliseconds / 1000f) * 5f;
+            light.lightParams.Direction.Z = (float)Math.Sin(timer.ElapsedMilliseconds / 1000f) * 0.1f;
+            light.lightParams.Direction.X = (float)Math.Cos(timer.ElapsedMilliseconds / 1000f) * 0.1f;
+
+            ballPos.Z = (float)Math.Sin(timer.ElapsedMilliseconds / 1000f) * 2f;
 
             renderer.Render();
 
@@ -151,7 +199,8 @@ public static class Program
                     light.ShaderResourceView,
                     renderer.output.RenderTargetView!,
                     renderer.output.Description.Width,
-                    renderer.output.Description.Height);
+                    renderer.output.Description.Height,
+                    exponent: 32f);
 
             WpfDispatcher.ProcessMessages();
             presenter.Present();
@@ -171,8 +220,10 @@ public partial class DirectionalLight : Light
     readonly RenderingInstructions lightInstructions;
     readonly Viewport viewport;
 
-    readonly RenderingTexture lightTexture = new(ShaderUsage.RenderTarget | ShaderUsage.ShaderResource);
+    readonly RenderingTexture lightTexture = new(ShaderUsage.DepthStencil | ShaderUsage.ShaderResource);
     public Resources.Shaders.DirectionalLightProgram.LightParameters lightParams;
+
+    public TransitionGate Gate = new();
 
     public DirectionalLight(
         int texWidth, int texHeight,
@@ -188,13 +239,14 @@ public partial class DirectionalLight : Light
                 this.lightParams.Set(c);
                 c.PixelShader.SetShaderResource(10, lightTexture.ShaderResourceView);
             })
+            .Then(Gate)
             .ThenDraw(Resources.Shaders.DirectionalLightProgram.Draw);
 
-        lightTexture.RenderTargetViewDesc = new()
+        lightTexture.DepthStencilViewDesc = new()
         {
-            Format = Format.R32G32B32A32_Float,
-            Dimension = RenderTargetViewDimension.Texture2D,
-            Texture2D = new RenderTargetViewDescription.Texture2DResource()
+            Format = Format.D24_UNorm_S8_UInt,
+            Dimension = DepthStencilViewDimension.Texture2D,
+            Texture2D = new DepthStencilViewDescription.Texture2DResource()
             {
                 MipSlice = 0
             }
@@ -202,7 +254,7 @@ public partial class DirectionalLight : Light
 
         lightTexture.ShaderResourceViewDesc = new()
         {
-            Format = Format.R32G32B32A32_Float,
+            Format = Format.R24_UNorm_X8_Typeless,
             Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.Texture2D,
             Texture2D = new ShaderResourceViewDescription.Texture2DResource()
             {
@@ -215,9 +267,9 @@ public partial class DirectionalLight : Light
         {
             Width = texWidth,
             Height = texHeight,
-            Format = Format.R32G32B32A32_Float,
+            Format = Format.R24G8_Typeless,
             SampleDescription = new SampleDescription(count: 1, quality: 0),
-            BindFlags = BindFlags.ShaderResource | BindFlags.RenderTarget,
+            BindFlags = BindFlags.DepthStencil | BindFlags.ShaderResource,
             MipLevels = 1,
             ArraySize = 1,
             Usage = ResourceUsage.Default,
@@ -236,11 +288,11 @@ public partial class DirectionalLight : Light
     public override void Setup(DeviceContext1 context)
     {
         // TEMP
-        lightParams.SetShadowCast(ref lightParams, Position, Size.X, Size.Y);
+        //lightParams.SetShadowCast(ref lightParams, View * Projection(Aspect));
 
-        context.ClearRenderTargetView(lightTexture.RenderTargetView, new Color(0, 1, 0, 0));
+        context.ClearDepthStencilView(lightTexture.DepthStencilView, DepthStencilClearFlags.Depth, 1f, 0);
         context.Rasterizer.SetViewport(viewport);
-        context.OutputMerger.SetRenderTargets(lightTexture.RenderTargetView);
+        context.OutputMerger.SetRenderTargets(lightTexture.DepthStencilView);
     }
 }
 

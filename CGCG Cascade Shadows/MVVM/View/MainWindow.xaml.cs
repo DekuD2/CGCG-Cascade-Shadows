@@ -35,6 +35,7 @@ public partial class MainWindow : Window
     {
         DataContext = dataContext;
         viewModel = dataContext;
+        dataContext.Error += MainViewModel_Error;
 
         InitializeComponent();
     }
@@ -77,5 +78,25 @@ public partial class MainWindow : Window
     private void renderingTarget_MouseWheel(object sender, MouseWheelEventArgs e)
     {
         viewModel.MoveCameraCommand.Execute(new Vector3(0, 0, e.Delta * cameraForwardSpeed));
+    }
+
+    private void MainViewModel_Error(string error)
+    {
+        //errorPopupMessage.Text = error;
+        //errorPopup.IsOpen = true;
+
+        string messageBoxText = error;
+        string caption = "Error";
+        MessageBoxButton button = MessageBoxButton.OK;
+        MessageBoxImage icon = MessageBoxImage.Error;
+        MessageBoxResult result;
+
+        result = MessageBox.Show(messageBoxText, caption, button, icon, MessageBoxResult.Yes);
+
+    }
+
+    private void Button_Click(object sender, RoutedEventArgs e)
+    {
+        errorPopup.IsOpen = false;
     }
 }

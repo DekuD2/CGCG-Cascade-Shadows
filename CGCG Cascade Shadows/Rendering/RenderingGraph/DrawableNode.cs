@@ -14,10 +14,15 @@ public sealed class DrawableNode : RenderingNode
 
     public override bool Alive => step.Alive && !Outdated;
 
+    public override bool Show => step.Show;
+
     internal bool Outdated { get; private set; } = false;
 
     public override void Render(DeviceContext1 context)
-        => step.Draw(context);
+    {
+        if (Show)
+            step.Draw(context);
+    }
 
     internal void Outdate()
         => Outdated = true;

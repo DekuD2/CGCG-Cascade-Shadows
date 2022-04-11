@@ -9,4 +9,5 @@ public abstract partial class TransitionStep : IRenderingStep
 
     public abstract void Enter(DeviceContext1 context);
     public virtual void Exit(DeviceContext1 context) { }
+    public virtual bool Show => true;
 }

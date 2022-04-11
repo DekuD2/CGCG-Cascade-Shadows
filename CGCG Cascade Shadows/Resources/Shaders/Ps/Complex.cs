@@ -1,6 +1,7 @@
 ﻿using SharpDX;
 using SharpDX.Direct3D11;
 
+using System;
 using System.Runtime.InteropServices;
 
 using SRV = SharpDX.Direct3D11.ShaderResourceView;

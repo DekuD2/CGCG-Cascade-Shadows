@@ -8,10 +8,10 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid Background="AliceBlue">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="120"/>
-        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
         <d:Grid.DataContext>
             <local:MainViewModel/>
         </d:Grid.DataContext>
@@ -27,6 +27,40 @@
                 <b:InvokeCommandAction Command="{Binding ChangeOutputCommand}"
                                        CommandParameter="{Binding ElementName=outputSelect, Path=SelectedIndex}"/>
             </b:EventTrigger>
+
+            <b:EventTrigger SourceName="ambientLightCb"
+                            EventName="Checked">
+                <b:InvokeCommandAction Command="{Binding ToggleOnCommand}"
+                                       CommandParameter="ambient light"/>
+            </b:EventTrigger>
+            <b:EventTrigger SourceName="ambientLightCb"
+                            EventName="Unchecked">
+                <b:InvokeCommandAction Command="{Binding ToggleOffCommand}"
+                                       CommandParameter="ambient light"/>
+            </b:EventTrigger>
+
+
+            <b:EventTrigger SourceName="pointLightCb"
+                            EventName="Checked">
+                <b:InvokeCommandAction Command="{Binding ToggleOnCommand}"
+                                       CommandParameter="point light"/>
+            </b:EventTrigger>
+            <b:EventTrigger SourceName="pointLightCb"
+                            EventName="Unchecked">
+                <b:InvokeCommandAction Command="{Binding ToggleOffCommand}"
+                                       CommandParameter="point light"/>
+            </b:EventTrigger>
+
+            <b:EventTrigger SourceName="directionalLightCb"
+                            EventName="Checked">
+                <b:InvokeCommandAction Command="{Binding ToggleOnCommand}"
+                                       CommandParameter="directional light"/>
+            </b:EventTrigger>
+            <b:EventTrigger SourceName="directionalLightCb"
+                            EventName="Unchecked">
+                <b:InvokeCommandAction Command="{Binding ToggleOffCommand}"
+                                       CommandParameter="directional light"/>
+            </b:EventTrigger>
         </b:Interaction.Triggers>
 
         <!--<Label>Hi</Label>-->
@@ -34,8 +68,8 @@
                           MouseMove="renderingTarget_MouseMove"
                           MouseWheel="renderingTarget_MouseWheel"/>
 
-        <StackPanel Grid.Column="1"
-                    Orientation="Vertical">
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal">
             <ComboBox x:Name="outputSelect"
                       Width="120">
                 <ComboBoxItem Content="Default" IsSelected="True"/>
@@ -49,6 +83,46 @@
                 <ComboBoxItem Content="Light 1 output"/>
             </ComboBox>
 
+            <Button Content="Reload directional light shader"
+                    Command="{Binding ReloadShaderCommand}"
+                    CommandParameter="complex.hlsl"/>
+
+            <ToggleButton x:Name="ambientLightCb"
+                          Content="Ambient light"
+                          IsChecked="True"
+                          VerticalAlignment="Center"
+                          Margin="5"/>
+
+            <ToggleButton x:Name="pointLightCb"
+                          Content="Point light"
+                          IsChecked="True"
+                          VerticalAlignment="Center"
+                          Margin="5"/>
+
+            <ToggleButton x:Name="directionalLightCb"
+                          Content="Directional light"
+                          IsChecked="True"
+                          VerticalAlignment="Center"
+                          Margin="5"/>
+
         </StackPanel>
+
+        <Popup x:Name="errorPopup" IsOpen="False">
+            <DockPanel MinWidth="600" Background="Red">
+                <TextBox x:Name="errorPopupMessage" 
+                         DockPanel.Dock="Top" 
+                         HorizontalAlignment="Stretch"
+                         VerticalAlignment="Stretch"
+                         Background="White"
+                         Foreground="Black"
+                         AcceptsReturn="True"
+                         TextWrapping="Wrap"/>
+                <Button Content="Hide" 
+                        Height="30"
+                        DockPanel.Dock="Bottom" 
+                        VerticalAlignment="Bottom"
+                        Click="Button_Click"/>
+            </DockPanel>
+        </Popup>
     </Grid>
 </Window>
