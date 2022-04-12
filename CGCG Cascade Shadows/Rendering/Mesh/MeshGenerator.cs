@@ -143,10 +143,10 @@ public static class MeshGenerator
         {
             Positions = new Vector3[]
             {
-                new(-1, +1, 0),
-                new(-1, -1, 0),
-                new(+1, +1, 0),
-                new(+1, -1, 0)
+                new(-1, +1, 0), // top left
+                new(-1, -1, 0), // bottom left
+                new(+1, +1, 0), // top right
+                new(+1, -1, 0)  // bottom right
             },
             Normals = new Vector3[]
             {
@@ -154,6 +154,16 @@ public static class MeshGenerator
                 new(0, 0, 1),
                 new(0, 0, 1),
                 new(0, 0, 1),
+            },
+            TexCoordChannels = new Vector2[][]
+            {
+                new Vector2[]
+                {
+                    new(0,0),
+                    new(0,1),
+                    new(1,0),
+                    new(1,1)
+                }
             },
             Indices = new uint[] { 0, 1, 2, 2, 1, 3 }
         };

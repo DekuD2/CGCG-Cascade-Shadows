@@ -52,33 +52,6 @@ float4 Main(PsIn input) : SV_Target
 	float gloss = glossTexture.Sample(texSampler, input.uv).r;
 	float alpha = alphaTexture.Sample(texSampler, input.uv).r;
 
-	//float3 shadow = shadowTexture.Sample(texSampler, input.uv).rgb;
-
-	// we need to find a ray (world position with the direction of light)
-	// and intersect a plane of the light source
-	// if we get intersection, we can get relative distance
-	// project that with dot product or sum? (we should know the camera up TODO: exception when facing directly downward)
-	// so project light direction onto up and normalize it
-
-	// Just take the world position and multiply it by the light's worldposition
-	// Then divide xy by w and those are the uv texture coordinates
-	// (depth = z / w)
-	//  - depth must be > 0, otherwise it's behind the light (only for point light tho)
-
-	// WAIT WE DON'T NEED THIS
-	// We just need to project it onto a plane
-
-	//float3 rightDir = normalize(cross(float3(0, 1, 0), lightDir));
-	//float3 upDir = normalize(cross(rightDir, lightDir));
-
-	//float3 relative = position - shadowCastPos;
-	//float right = dot(rightDir, relative);
-	//float up = dot(upDir, relative);
-
-	//float2 shadowUV = float2(right / shadowCastWidth + 0.5, up / shadowCastHeight + 0.5);
-	//shadowUV = input.uv;
-	//float3 shadowWorld = shadowTexture.Sample(texSampler, shadowUV).rgb;
-
 	float4 lightSpacePos = mul(float4(position, 1), lightViewProjection);
 	if (lightSpacePos.w == 0)
 		lightSpacePos.w = 1.0;
@@ -93,15 +66,15 @@ float4 Main(PsIn input) : SV_Target
 
 	// shadowMapCoords = float2(0.5, 0.5);
 
-
 	float lightMapDepth = lightSpacePos.z / lightSpacePos.w;
 
-	float depthDiff = depth - shadowTexture.Sample(texSampler, shadowMapCoords).r;
+	float depthSample = shadowTexture.Sample(texSampler, shadowMapCoords).r;
+	float depthDiff = depth - depthSample;
 
-	return float4(lightSpacePos.xyz, 1);
+	// return float4(pow(depthDiff, 1), 0, 0, 1);
 	// float cmp = shadowTexture.SampleCmpLevelZero(texSampler, shadowMapCoords, depth + 0.01);
 
-	if (!castShadow || depthDiff > 0.1) // or not in shadow
+	if (!castShadow || depthDiff < 0.001) // or not in shadow
 	{
 		//return float4(shadowMapCoords, 0, 1);
 		//return float4(shadowUV.x * 255, shadowUV.y * 255, 0, 1);

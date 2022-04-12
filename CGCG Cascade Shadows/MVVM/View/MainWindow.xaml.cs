@@ -92,7 +92,6 @@ public partial class MainWindow : Window
         MessageBoxResult result;
 
         result = MessageBox.Show(messageBoxText, caption, button, icon, MessageBoxResult.Yes);
-
     }
 
     private void Button_Click(object sender, RoutedEventArgs e)

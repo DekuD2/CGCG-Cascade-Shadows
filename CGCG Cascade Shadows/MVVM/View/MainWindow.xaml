@@ -86,6 +86,10 @@
             <Button Content="Reload directional light shader"
                     Command="{Binding ReloadShaderCommand}"
                     CommandParameter="complex.hlsl"/>
+            
+            <Button Content="Open"
+                    Command="{Binding OpenFile}"
+                    CommandParameter="Shaders\Ps\directionalLight.hlsl"/>
 
             <ToggleButton x:Name="ambientLightCb"
                           Content="Ambient light"

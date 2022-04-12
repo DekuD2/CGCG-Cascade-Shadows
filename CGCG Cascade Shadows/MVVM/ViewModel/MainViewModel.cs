@@ -3,6 +3,8 @@
 using SharpDX;
 
 using System;
+using System.IO;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Controls;
@@ -19,6 +21,7 @@ public class MainViewModel : ObservableObject
     public ICommand ReloadShaderCommand { get; init; }
     public ICommand ToggleOnCommand { get; init; }
     public ICommand ToggleOffCommand { get; init; }
+    public ICommand OpenFile { get; init; }
 
     public event Action<Vector3>? MoveCamera;
     public event Action<Vector2>? RotateCamera;
@@ -65,6 +68,20 @@ public class MainViewModel : ObservableObject
         ToggleOnCommand = new RelayCommand(o => Toggle?.Invoke(o?.ToString() ?? "", true));
 
         ToggleOffCommand = new RelayCommand(o => Toggle?.Invoke(o?.ToString() ?? "", false));
+
+        OpenFile = new RelayCommand(o =>
+        {
+            using Process p = new()
+            {
+                StartInfo =
+                {
+                    FileName = o?.ToString() ?? "",
+                    UseShellExecute = true
+                }
+            };
+            p.Start();
+        });
+
     }
 
     public async Task<DirectXPresenter> GetDirectXPresenter()

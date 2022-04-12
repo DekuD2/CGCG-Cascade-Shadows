@@ -2,6 +2,8 @@
 using FR.CascadeShadows.Rendering.Meshes;
 using FR.CascadeShadows.Resources;
 
+using Microsoft.Win32;
+
 using SharpDX;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
@@ -20,6 +22,13 @@ public static class Program
 {
     static TransitionGate PointLightGate = new();
     static TransitionGate AmbientLightGate = new();
+    private const string keyBase = @"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths";
+
+    static string? GetProgramPath(string filename)
+    {
+        using RegistryKey? fileKey = Registry.LocalMachine.OpenSubKey(string.Format(@"{0}\{1}", keyBase, filename));
+        return fileKey?.GetValue(string.Empty)?.ToString();
+    }
 
     [STAThread]
     public static void Main()
@@ -82,6 +91,8 @@ public static class Program
                 c.DrawLastGeometry();
             });
 
+        float quadHeight = -10;
+
         var quad = MeshGenerator.GenerateQuad();
         var quadInstr = DeferredPipeline.SurfacePass
             .Set(Resources.Shaders.SimpleProgram.Set)
@@ -94,7 +105,7 @@ public static class Program
             })
             .ThenDraw(c =>
             {
-                ConstantBuffers.UpdateTransform(c, Matrix.RotationX(-MathF.PI * 0.5f) * Matrix.Scaling(10f) * Matrix.Translation(0, -3, 0));
+                ConstantBuffers.UpdateTransform(c, Matrix.RotationX(-MathF.PI * 0.5f) * Matrix.Scaling(10f) * Matrix.Translation(0, quadHeight, 0));
                 c.DrawLastGeometry();
             });
 
@@ -174,10 +185,12 @@ public static class Program
 
         while (true)
         {
-            light.lightParams.Direction.Z = (float)Math.Sin(timer.ElapsedMilliseconds / 1000f) * 0.1f;
-            light.lightParams.Direction.X = (float)Math.Cos(timer.ElapsedMilliseconds / 1000f) * 0.1f;
+            light.lightParams.Direction.Z = (float)Math.Sin(timer.ElapsedMilliseconds / 1000f) * 0.02f;
+            light.lightParams.Direction.X = (float)Math.Cos(timer.ElapsedMilliseconds / 1000f) * 0.02f;
 
-            ballPos.Z = (float)Math.Sin(timer.ElapsedMilliseconds / 1000f) * 2f;
+            ballPos.Z = (float)Math.Sin(timer.ElapsedMilliseconds / 1400f) * 2f;
+
+            quadHeight = -5 + (float)Math.Cos(timer.ElapsedMilliseconds / 1800f) * 5f;
 
             renderer.Render();
 
@@ -288,7 +301,7 @@ public partial class DirectionalLight : Light
     public override void Setup(DeviceContext1 context)
     {
         // TEMP
-        //lightParams.SetShadowCast(ref lightParams, View * Projection(Aspect));
+        lightParams.SetShadowCast(ref lightParams, View * Projection(Aspect));
 
         context.ClearDepthStencilView(lightTexture.DepthStencilView, DepthStencilClearFlags.Depth, 1f, 0);
         context.Rasterizer.SetViewport(viewport);
@@ -312,6 +325,6 @@ public partial class DirectionalLight : ICamera
     public RectangleF ViewportRectangle => new(0, 0, 1, 1);
 
     public Matrix Projection(float aspect)
-        => Matrix.OrthoRH(Size.X, Size.Y, 0.01f, 100f);
+        => Matrix.OrthoRH(Size.X, Size.Y, 0.01f, 250f);
 
 }
