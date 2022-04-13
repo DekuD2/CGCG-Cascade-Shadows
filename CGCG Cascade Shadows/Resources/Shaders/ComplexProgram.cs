@@ -18,13 +18,16 @@ public static class ComplexProgram
         Ps.Complex.Set(context);
     }
 
-    public class Material : TransitionStep
+    public class Material : TransitionStep, IMaterial
     {
         public ShaderResourceView? Diffuse { get; init; }
         public ShaderResourceView? Normal { get; init; }
         public ShaderResourceView? Glossy { get; init; }
         public ShaderResourceView? Emission { get; init; }
         public ShaderResourceView? Specular { get; init; }
+
+        public TransitionStep ProgramStep => new TransitionMethod(Set);
+        public TransitionStep MaterialStep => new TransitionMethod(Enter);
 
         public override void Enter(DeviceContext1 context)
             => Ps.Complex.SetParameters(context, Diffuse, Normal, Glossy, Emission, Specular);

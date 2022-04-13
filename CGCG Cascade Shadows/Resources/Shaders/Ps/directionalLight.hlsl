@@ -53,33 +53,28 @@ float4 Main(PsIn input) : SV_Target
 	float alpha = alphaTexture.Sample(texSampler, input.uv).r;
 
 	float4 lightSpacePos = mul(float4(position, 1), lightViewProjection);
-	if (lightSpacePos.w == 0)
-		lightSpacePos.w = 1.0;
-	float2 shadowMapCoords = 0.5 * lightSpacePos.xy / lightSpacePos.w + float2(-0.5, 0.5);
+	float2 shadowMapCoords = float2(shadowMapCoords.x = 0.5 + (lightSpacePos.x / lightSpacePos.w * 0.5),
+									shadowMapCoords.y = 0.5 - (lightSpacePos.y / lightSpacePos.w * 0.5));
 
-	shadowMapCoords.x = 0.5 + (lightSpacePos.x / lightSpacePos.w * 0.5);
-	shadowMapCoords.y = 0.5 - (lightSpacePos.y / lightSpacePos.w * 0.5);
-	float depth = lightSpacePos.z / lightSpacePos.w;
+	float lightSpaceDepth = lightSpacePos.z / lightSpacePos.w;
 
-	// if (shadowMapCoords.x > 1 || shadowMapCoords.x < 0 || shadowMapCoords.y > 1 || shadowMapCoords.y < 0)
-	// 	return float4(0, 0, 0, 0);
-
-	// shadowMapCoords = float2(0.5, 0.5);
+	// Check if within the light
+	if (shadowMapCoords.x != saturate(shadowMapCoords.x)
+		|| shadowMapCoords.y != saturate(shadowMapCoords.y)
+		|| lightSpaceDepth < 0)
+		return float4(0, 0, 0, 0);
 
 	float lightMapDepth = lightSpacePos.z / lightSpacePos.w;
 
 	float depthSample = shadowTexture.Sample(texSampler, shadowMapCoords).r;
-	float depthDiff = depth - depthSample;
+	float depthDiff = lightSpaceDepth - depthSample;
 
 	// return float4(pow(depthDiff, 1), 0, 0, 1);
 	// float cmp = shadowTexture.SampleCmpLevelZero(texSampler, shadowMapCoords, depth + 0.01);
 
 	if (!castShadow || depthDiff < 0.001) // or not in shadow
 	{
-		//return float4(shadowMapCoords, 0, 1);
-		//return float4(shadowUV.x * 255, shadowUV.y * 255, 0, 1);
-		//return float4(shadowWorld, 1);
-
+		// Calculate light normally
 		normal = normalize(normal);
 
 		float3 toLight = -normalize(lightDir);

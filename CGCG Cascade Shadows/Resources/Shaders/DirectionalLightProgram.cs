@@ -56,7 +56,7 @@ public static class DirectionalLightProgram
             this.Intensity = intensity;
         }
 
-        public void SetShadowCast(ref LightParameters @this, Matrix lightViewProjection)
+        public void SetProjection(ref LightParameters @this, Matrix lightViewProjection)
         {
             @this.CastShadow = true;
             @this.LightViewProjection = Matrix.Transpose(lightViewProjection);

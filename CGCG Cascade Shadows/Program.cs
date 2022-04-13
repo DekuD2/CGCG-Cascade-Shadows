@@ -1,4 +1,5 @@
-﻿using FR.CascadeShadows.Rendering;
+﻿using FR.CascadeShadows;
+using FR.CascadeShadows.Rendering;
 using FR.CascadeShadows.Rendering.Meshes;
 using FR.CascadeShadows.Resources;
 
@@ -22,19 +23,18 @@ public static class Program
 {
     static TransitionGate PointLightGate = new();
     static TransitionGate AmbientLightGate = new();
-    private const string keyBase = @"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths";
 
-    static string? GetProgramPath(string filename)
-    {
-        using RegistryKey? fileKey = Registry.LocalMachine.OpenSubKey(string.Format(@"{0}\{1}", keyBase, filename));
-        return fileKey?.GetValue(string.Empty)?.ToString();
-    }
+    //private const string keyBase = @"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths";
+
+    //static string? GetProgramPath(string filename)
+    //{
+    //    using RegistryKey? fileKey = Registry.LocalMachine.OpenSubKey(string.Format(@"{0}\{1}", keyBase, filename));
+    //    return fileKey?.GetValue(string.Empty)?.ToString();
+    //}
 
     [STAThread]
     public static void Main()
     {
-        // TODO: I commented a lot of complex vertex shader and pixel shader to figure out the
-        // D3D11 ERROR: ID3D11DeviceContext::Draw: Vertex Shader - Pixel Shader linkage error: Signatures between stages are incompatible. The input stage requires Semantic/Index (TEXCOORD,1) as input, but it is not provided by the output stage. [ EXECUTION ERROR #342: DEVICE_SHADER_LINKAGE_SEMANTICNAME_NOT_FOUND]
         Directory.SetCurrentDirectory("Resources");
 
         MainViewModel viewModel = new();
@@ -45,84 +45,122 @@ public static class Program
         var presenter = viewModel.GetDirectXPresenter().Result;
         var renderer = new Renderer(presenter.Output);
         var ship = ResourceCache.Get<Mesh>(@"Models\ship_02.obj");
-        // presenter.Output
-        //var i = renderer.ForwardPass.AttachInstructions();
-        //Console.WriteLine(Resources.Shaders.Ps.Color.Hi);
-
-        Mesh mesh = new();
-        mesh.Positions = new Vector3[] { new Vector3(-1, 0, -1), new Vector3(1, 0, 0), new Vector3(0, 1, 1) };
-        mesh.Normals = new Vector3[] { new Vector3(0, 0, 1), new Vector3(0, 0, 1), new Vector3(0, 0, 1) };
-        mesh.Indices = new uint[] { 0, 1, 2 };
-        var geometry = mesh.GeometryData;
-
-        var shipInstr2 = DeferredPipeline.SurfacePass
-            .Set(Resources.Shaders.ComplexProgram.Set)
-            .Then(new Resources.Shaders.ComplexProgram.Material()
-            {
-                Diffuse = ResourceCache.Get<ShaderResourceView>(@"Models\Ship\ship_orange.png"),
-                Normal = ResourceCache.Get<ShaderResourceView>(@"Models\Ship\ship_normal.png"),
-                Emission = ResourceCache.Get<ShaderResourceView>(@"Models\Ship\ship_orange_emission.png"),
-                Specular = ResourceCache.Get<ShaderResourceView>(@"Models\Ship\ship_ior.png"),
-                Glossy = ResourceCache.Get<ShaderResourceView>(@"Models\Ship\ship_metallic2.png"),
-            })
-            .Then(GeometryData.Set(ship))
-            .ThenDraw(c =>
-            {
-                ConstantBuffers.UpdateTransform(c, Matrix.Scaling(0.05f));
-                c.DrawLastGeometry();
-            });
-
         var ball = MeshGenerator.GenerateSphere(20, 20);
+        var quad = MeshGenerator.GenerateQuad();
+
+        MeshObject shipMO = new(ship, new Resources.Shaders.ComplexProgram.Material()
+        {
+            Diffuse = ResourceCache.Get<ShaderResourceView>(@"Models\Ship\ship_orange.png"),
+            Normal = ResourceCache.Get<ShaderResourceView>(@"Models\Ship\ship_normal.png"),
+            Emission = ResourceCache.Get<ShaderResourceView>(@"Models\Ship\ship_orange_emission.png"),
+            Specular = ResourceCache.Get<ShaderResourceView>(@"Models\Ship\ship_ior.png"),
+            Glossy = ResourceCache.Get<ShaderResourceView>(@"Models\Ship\ship_metallic2.png"),
+        })
+        {
+            Scale = new(0.05f)
+        };
+
+        var ballMO = new MeshObject(ball, new Resources.Shaders.SimpleProgram.Material()
+        {
+            Diffuse = Color.Green,
+            Gloss = 0.7f,
+            SpecularPower = 128f
+        })
+        {
+            Scale = new(0.4f),
+            Position = new(0, 4, 0)
+        };
+
+        var ballMO2 = new MeshObject(ball, new Resources.Shaders.SimpleProgram.Material()
+        {
+            Diffuse = Color.Blue,
+            Gloss = 0.3f,
+            SpecularPower = 1f
+        })
+        {
+            Scale = new(0.4f),
+            Position = new(3, 2, 1)
+        };
+
+        var quadMO = new MeshObject(quad, new Resources.Shaders.SimpleProgram.Material()
+        {
+            Diffuse = Color.White,
+            Gloss = 0.2f,
+            SpecularPower = 0.5f
+        })
+        {
+            Scale = new(10f),
+            Position = new(0, -5, 0),
+            Rotation = Quaternion.RotationYawPitchRoll(0f, -MathF.PI * 0.5f, 0f)
+        };
 
         Vector3 ballPos = new(0, 4, 0);
-
-        var ballInstr = DeferredPipeline.SurfacePass
-            .Set(Resources.Shaders.SimpleProgram.Set)
-            .Then(GeometryData.Set(ball))
-            .Then(new Resources.Shaders.SimpleProgram.Material()
-            {
-                Diffuse = Color.Green,
-                Gloss = 0.7f,
-                SpecularPower = 128f
-            })
-            .ThenDraw(c =>
-            {
-                ConstantBuffers.UpdateTransform(c, Matrix.Scaling(0.4f) * Matrix.Translation(ballPos));
-                c.DrawLastGeometry();
-            });
-
         float quadHeight = -10;
 
-        var quad = MeshGenerator.GenerateQuad();
-        var quadInstr = DeferredPipeline.SurfacePass
-            .Set(Resources.Shaders.SimpleProgram.Set)
-            .Then(GeometryData.Set(quad))
-            .Then(new Resources.Shaders.SimpleProgram.Material()
-            {
-                Diffuse = Color.White,
-                Gloss = 0.2f,
-                SpecularPower = 0.5f
-            })
-            .ThenDraw(c =>
-            {
-                ConstantBuffers.UpdateTransform(c, Matrix.RotationX(-MathF.PI * 0.5f) * Matrix.Scaling(10f) * Matrix.Translation(0, quadHeight, 0));
-                c.DrawLastGeometry();
-            });
+        #region old scene setup (maybe better because it's more obvoius whats going on?)
+        //var shipInstr2 = DeferredPipeline.SurfacePass
+        //    .Set(Resources.Shaders.ComplexProgram.Set)
+        //    .Then(new Resources.Shaders.ComplexProgram.Material()
+        //    {
+        //        Diffuse = ResourceCache.Get<ShaderResourceView>(@"Models\Ship\ship_orange.png"),
+        //        Normal = ResourceCache.Get<ShaderResourceView>(@"Models\Ship\ship_normal.png"),
+        //        Emission = ResourceCache.Get<ShaderResourceView>(@"Models\Ship\ship_orange_emission.png"),
+        //        Specular = ResourceCache.Get<ShaderResourceView>(@"Models\Ship\ship_ior.png"),
+        //        Glossy = ResourceCache.Get<ShaderResourceView>(@"Models\Ship\ship_metallic2.png"),
+        //    })
+        //    .Then(GeometryData.Set(ship))
+        //    .ThenDraw(c =>
+        //    {
+        //        ConstantBuffers.UpdateTransform(c, Matrix.Scaling(0.05f));
+        //        c.DrawLastGeometry();
+        //    });
 
-        var ballInstr2 = DeferredPipeline.SurfacePass
-            .Set(Resources.Shaders.SimpleProgram.Set)
-            .Then(GeometryData.Set(ball))
-            .Then(new Resources.Shaders.SimpleProgram.Material()
-            {
-                Diffuse = Color.Blue,
-                Gloss = 0.3f,
-                SpecularPower = 1f
-            })
-            .ThenDraw(c =>
-            {
-                ConstantBuffers.UpdateTransform(c, Matrix.Scaling(0.4f) * Matrix.Translation(new(3, 2, 1)));
-                c.DrawLastGeometry();
-            });
+
+        //var ballInstr = DeferredPipeline.SurfacePass
+        //    .Set(Resources.Shaders.SimpleProgram.Set)
+        //    .Then(GeometryData.Set(ball))
+        //    .Then(new Resources.Shaders.SimpleProgram.Material()
+        //    {
+        //        Diffuse = Color.Green,
+        //        Gloss = 0.7f,
+        //        SpecularPower = 128f
+        //    })
+        //    .ThenDraw(c =>
+        //    {
+        //        ConstantBuffers.UpdateTransform(c, Matrix.Scaling(0.4f) * Matrix.Translation(ballPos));
+        //        c.DrawLastGeometry();
+        //    });
+
+        //var quadInstr = DeferredPipeline.SurfacePass
+        //    .Set(Resources.Shaders.SimpleProgram.Set)
+        //    .Then(GeometryData.Set(quad))
+        //    .Then(new Resources.Shaders.SimpleProgram.Material()
+        //    {
+        //        Diffuse = Color.White,
+        //        Gloss = 0.2f,
+        //        SpecularPower = 0.5f
+        //    })
+        //    .ThenDraw(c =>
+        //    {
+        //        ConstantBuffers.UpdateTransform(c, Matrix.RotationX(-MathF.PI * 0.5f) * Matrix.Scaling(10f) * Matrix.Translation(0, quadHeight, 0));
+        //        c.DrawLastGeometry();
+        //    });
+
+        //var ballInstr2 = DeferredPipeline.SurfacePass
+        //    .Set(Resources.Shaders.SimpleProgram.Set)
+        //    .Then(GeometryData.Set(ball))
+        //    .Then(new Resources.Shaders.SimpleProgram.Material()
+        //    {
+        //        Diffuse = Color.Blue,
+        //        Gloss = 0.3f,
+        //        SpecularPower = 1f
+        //    })
+        //    .ThenDraw(c =>
+        //    {
+        //        ConstantBuffers.UpdateTransform(c, Matrix.Scaling(0.4f) * Matrix.Translation(new(3, 2, 1)));
+        //        c.DrawLastGeometry();
+        //});
+        #endregion
 
         var ambientInstr = DeferredPipeline.LightPass
             .Set(Resources.Shaders.AmbientProgram.Set)
@@ -139,17 +177,18 @@ public static class Program
         DirectionalLight light = new(512, 512, new(new Vector3(0.01f, -1, -0.01f), Color.White, 0.4f))
         {
             Position = new(0, 100, 0),
-            Size = new(30, 30)
+            Range = new(30, 30)
         };
 
         renderer.Lights.Add(light);
 
-        //data.Position = Transform.World.TranslationVector;W
+        //data.Position = Transform.World.TranslationVector;
         //PointLightProgram.SetParameters(context, data);
         //PointLightProgram.Draw(context, data.Position, data.CalculateArea());
 
         int outputIdx = 0;
 
+        #region setup window interactions
         renderer.Camera.Position = new(1, 4, 10);
         viewModel.MoveCamera += x => renderer.Camera.Move(x);
         viewModel.RotateCamera += x => renderer.Camera.Rotate(x);
@@ -176,6 +215,7 @@ public static class Program
             };
             gate.ShowNode = show;
         };
+        #endregion
 
         Queue<TimeSpan> snapshots = new(Enumerable.Repeat(TimeSpan.Zero, 60));
         Stopwatch stopwatch = new();
@@ -185,15 +225,20 @@ public static class Program
 
         while (true)
         {
-            light.lightParams.Direction.Z = (float)Math.Sin(timer.ElapsedMilliseconds / 1000f) * 0.02f;
-            light.lightParams.Direction.X = (float)Math.Cos(timer.ElapsedMilliseconds / 1000f) * 0.02f;
+            // Scene dynamics
+            light.LightParams.Direction.Z = (float)Math.Sin(timer.ElapsedMilliseconds / 1000f) * 0.02f;
+            light.LightParams.Direction.X = (float)Math.Cos(timer.ElapsedMilliseconds / 1000f) * 0.02f;
 
             ballPos.Z = (float)Math.Sin(timer.ElapsedMilliseconds / 1400f) * 2f;
+            ballMO.Position.Z = (float)Math.Sin(timer.ElapsedMilliseconds / 1400f) * 2f;
 
             quadHeight = -5 + (float)Math.Cos(timer.ElapsedMilliseconds / 1800f) * 5f;
+            quadMO.Position.Y = -5 + (float)Math.Cos(timer.ElapsedMilliseconds / 1800f) * 5f;
 
+            // Render
             renderer.Render();
 
+            // Output filter
             DeferredPipeline.DEBUG_onlySurface = false;
             if (outputIdx is > 0 and <= 7)
             {
@@ -213,11 +258,38 @@ public static class Program
                     renderer.output.RenderTargetView!,
                     renderer.output.Description.Width,
                     renderer.output.Description.Height,
-                    exponent: 32f);
+                    exponent: 1f);
 
+            // Other
             WpfDispatcher.ProcessMessages();
             presenter.Present();
         }
+    }
+}
+
+public class MeshObject
+{
+    public Vector3 Position = Vector3.Zero;
+    public Quaternion Rotation = Quaternion.Identity;
+    public Vector3 Scale = Vector3.One;
+
+    public Matrix Transform => Matrix.Scaling(Scale) * Matrix.RotationQuaternion(Rotation) * Matrix.Translation(Position);
+
+    RenderingInstructions instructions;
+
+    public MeshObject(Mesh mesh, IMaterial material)
+    {
+        instructions = DeferredPipeline.SurfacePass
+            .Set(material.ProgramStep)
+            .Then(material.MaterialStep)
+            .Then(GeometryData.Set(mesh))
+            .ThenDraw(Draw);
+    }
+
+    void Draw(DeviceContext1 context)
+    {
+        ConstantBuffers.UpdateTransform(context, Transform);
+        context.DrawLastGeometry();
     }
 }
 
@@ -228,58 +300,42 @@ public abstract class Light
     public abstract ICamera Camera { get; }
 }
 
-public partial class DirectionalLight : Light
+public abstract partial class BaseLight : Light
 {
-    readonly RenderingInstructions lightInstructions;
-    readonly Viewport viewport;
-
-    readonly RenderingTexture lightTexture = new(ShaderUsage.DepthStencil | ShaderUsage.ShaderResource);
-    public Resources.Shaders.DirectionalLightProgram.LightParameters lightParams;
-
-    public TransitionGate Gate = new();
-
-    public DirectionalLight(
-        int texWidth, int texHeight,
-        Resources.Shaders.DirectionalLightProgram.LightParameters lightParams)
+    static DepthStencilViewDescription DepthStencilViewDescription = new()
     {
-        viewport = new(0, 0, texWidth, texHeight, 0f, 1f);
-        this.lightParams = lightParams;
-
-        lightInstructions = DeferredPipeline.LightPass
-            .Set(Resources.Shaders.DirectionalLightProgram.Set)
-            .Then(c =>
-            {
-                this.lightParams.Set(c);
-                c.PixelShader.SetShaderResource(10, lightTexture.ShaderResourceView);
-            })
-            .Then(Gate)
-            .ThenDraw(Resources.Shaders.DirectionalLightProgram.Draw);
-
-        lightTexture.DepthStencilViewDesc = new()
+        Format = Format.D24_UNorm_S8_UInt,
+        Dimension = DepthStencilViewDimension.Texture2D,
+        Texture2D = new DepthStencilViewDescription.Texture2DResource()
         {
-            Format = Format.D24_UNorm_S8_UInt,
-            Dimension = DepthStencilViewDimension.Texture2D,
-            Texture2D = new DepthStencilViewDescription.Texture2DResource()
-            {
-                MipSlice = 0
-            }
+            MipSlice = 0
+        }
+    };
+
+    static ShaderResourceViewDescription ShaderResourceViewDescription = new()
+    {
+        Format = Format.R24_UNorm_X8_Typeless,
+        Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.Texture2D,
+        Texture2D = new ShaderResourceViewDescription.Texture2DResource()
+        {
+            MipLevels = 1,
+            MostDetailedMip = 0
+        }
+    };
+
+    public static (RenderingTexture, Viewport) CreateDepthTexture(int width, int height)
+    {
+        Viewport viewport = new(0, 0, width, height, 0f, 1f);
+        RenderingTexture renderingTexture = new(ShaderUsage.DepthStencil | ShaderUsage.ShaderResource)
+        {
+            DepthStencilViewDesc = DepthStencilViewDescription,
+            ShaderResourceViewDesc = ShaderResourceViewDescription
         };
 
-        lightTexture.ShaderResourceViewDesc = new()
+        renderingTexture.ReplaceTexture(new Texture2D(Devices.Device3D, new()
         {
-            Format = Format.R24_UNorm_X8_Typeless,
-            Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.Texture2D,
-            Texture2D = new ShaderResourceViewDescription.Texture2DResource()
-            {
-                MipLevels = 1,
-                MostDetailedMip = 0
-            }
-        };
-
-        lightTexture.ReplaceTexture(new Texture2D(Devices.Device3D, new()
-        {
-            Width = texWidth,
-            Height = texHeight,
+            Width = width,
+            Height = height,
             Format = Format.R24G8_Typeless,
             SampleDescription = new SampleDescription(count: 1, quality: 0),
             BindFlags = BindFlags.DepthStencil | BindFlags.ShaderResource,
@@ -289,42 +345,71 @@ public partial class DirectionalLight : Light
             CpuAccessFlags = CpuAccessFlags.None,
             OptionFlags = ResourceOptionFlags.None
         }));
+
+        return (renderingTexture, viewport);
     }
+    public override ICamera Camera => this;
 
     public Vector3 Position { get; set; }
-    public Vector2 Size { get; set; } = new(250, 250);
-    public ShaderResourceView ShaderResourceView => lightTexture.ShaderResourceView!;
+}
+public abstract partial class BaseLight : ICamera
+{
+    public bool Active => true;
+    public float Order => 1;
+    public Color Background => new(0f, 0f, 0f, 0f);
+    public RectangleF ViewportRectangle => new(0, 0, 1, 1);
 
-    public override float Aspect => Size.X / Size.Y;
-    public override ICamera Camera => this;
+    public abstract Matrix View { get; }
+    public abstract Matrix Projection(float aspect);
+}
+
+public partial class DirectionalLight : BaseLight
+{
+    public Resources.Shaders.DirectionalLightProgram.LightParameters LightParams;
+
+    readonly RenderingInstructions lightInstructions;
+    readonly Viewport viewport;
+    readonly RenderingTexture lightTexture;
+
+    public DirectionalLight(
+        int texWidth, int texHeight,
+        Resources.Shaders.DirectionalLightProgram.LightParameters lightParams)
+    {
+        (lightTexture, viewport) = CreateDepthTexture(texWidth, texHeight);
+
+        LightParams = lightParams;
+
+        lightInstructions = DeferredPipeline.LightPass
+            .Set(Resources.Shaders.DirectionalLightProgram.Set)
+            .Then(c =>
+            {
+                LightParams.Set(c);
+                c.PixelShader.SetShaderResource(10, lightTexture.ShaderResourceView);
+            })
+            .Then(Gate)
+            .ThenDraw(Resources.Shaders.DirectionalLightProgram.Draw);
+    }
+
+    public ShaderResourceView ShaderResourceView => lightTexture.ShaderResourceView!;
+    public TransitionGate Gate { get; } = new();
 
     public override void Setup(DeviceContext1 context)
     {
-        // TEMP
-        lightParams.SetShadowCast(ref lightParams, View * Projection(Aspect));
+        // TEMP??
+        LightParams.SetProjection(ref LightParams, View * Projection(Aspect));
 
         context.ClearDepthStencilView(lightTexture.DepthStencilView, DepthStencilClearFlags.Depth, 1f, 0);
         context.Rasterizer.SetViewport(viewport);
         context.OutputMerger.SetRenderTargets(lightTexture.DepthStencilView);
     }
-}
 
-public partial class DirectionalLight : ICamera
-{
-    public bool Active => true;
+    public Vector2 Range { get; set; } = new(250, 250);
+    public override float Aspect => Range.X / Range.Y;
 
-    public float Order => 1;
-
-    public Matrix View => Matrix.LookAtRH(
+    public override Matrix View => Matrix.LookAtRH(
                 Position,
-                Position + lightParams.Direction,
-                lightParams.Direction.X == 0 && lightParams.Direction.Z == 0 ? Vector3.ForwardRH : Vector3.Up);
-
-    public Color Background => new(0f, 0f, 0f, 0f);
-
-    public RectangleF ViewportRectangle => new(0, 0, 1, 1);
-
-    public Matrix Projection(float aspect)
-        => Matrix.OrthoRH(Size.X, Size.Y, 0.01f, 250f);
-
+                Position + LightParams.Direction,
+                LightParams.Direction.X == 0 && LightParams.Direction.Z == 0 ? Vector3.ForwardRH : Vector3.Up);
+    public override Matrix Projection(float aspect)
+        => Matrix.OrthoRH(Range.X, Range.Y, 0.01f, 250f);
 }
