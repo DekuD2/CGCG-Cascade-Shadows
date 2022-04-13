@@ -42,6 +42,12 @@ SamplerState texSampler
 	AddressV = Wrap;
 };
 
+
+float Shlick(float c, float3 l, float3 h)
+{
+	return c + (1 - c) * pow(1 - dot(l, h), 5);
+}
+
 float4 Main(PsIn input) : SV_Target
 {
 	// Get surface data
@@ -83,12 +89,15 @@ float4 Main(PsIn input) : SV_Target
 
 		float attenuation = saturate(intensity);
 
-		float3 color = saturate(dot(normal, toLight)) * albedo * lightColor * attenuation; // diffuse
+		float3 color = saturate(dot(normal, toLight)) * albedo * lightColor * attenuation; // diffuse // I think it should also use fresnel and gloss maybe? (I am really not sure)
 
 		float3 toCamera = normalize(camera - position);
 		float3 reflection = -normalize(reflect(toLight, normal));
 		float refDot = saturate(dot(reflection, toCamera));
-		color += pow(refDot, specular) * gloss * lightColor * attenuation; // specular
+
+		float fresnel = Shlick(gloss, toLight, normalize(toLight + toCamera));
+
+		color += pow(refDot, specular) * /*gloss * //replaced with fresnel*/ lightColor * attenuation * fresnel; // specular
 
 		return float4(color, alpha);
 	}

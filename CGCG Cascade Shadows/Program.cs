@@ -63,7 +63,7 @@ public static class Program
         var ballMO = new MeshObject(ball, new Resources.Shaders.SimpleProgram.Material()
         {
             Diffuse = Color.Green,
-            Gloss = 0.7f,
+            Gloss = 0.0f,
             SpecularPower = 128f
         })
         {
@@ -74,7 +74,7 @@ public static class Program
         var ballMO2 = new MeshObject(ball, new Resources.Shaders.SimpleProgram.Material()
         {
             Diffuse = Color.Blue,
-            Gloss = 0.3f,
+            Gloss = 0.0f,
             SpecularPower = 1f
         })
         {
