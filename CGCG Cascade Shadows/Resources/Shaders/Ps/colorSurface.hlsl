@@ -36,5 +36,21 @@ PsOut Main(PsIn input)
     output.specular = specular;
     output.alpha = 1;
 
+    //float z = input.position.z / input.position.w;
+    //if (z < 0.001)
+    //    output.emission = float4(1, 0, 0, 1);
+    //else if (z < 0.01)
+    //    output.emission = float4(0, 1, 0, 1);
+    //else if (z < 0.05)
+    //    output.emission = float4(0, 0, 1, 1);
+    //else if (z < 0.1)
+    //    output.emission = float4(1, 1, 0, 1);
+    //else if (z < 0.25)
+    //    output.emission = float4(0, 1, 1, 1);
+    //else
+    //    output.emission = float4(1, 0, 1, 1);
+
+    //output.emission = float4(0, z, 0, 1);
+
     return output;
 }

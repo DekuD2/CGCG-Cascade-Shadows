@@ -41,6 +41,4 @@ float4 Main(PsIn input) : SV_Target
     // 
     //return float4(albedo * ambientColor + emission, alpha);
     return float4(ambientColor * albedo + emission, alpha);
-
-    //return float4(0.1, 0.2, 0.3, 1);
 }

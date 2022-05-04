@@ -1,18 +1,22 @@
-﻿using SharpDX;
+﻿
+using SharpDX;
 
-namespace FR.CascadeShadows.Rendering;
+namespace FR.CascadeShadows.Rendering.Cameras;
 
-public class ControllableCamera : ICamera
+public partial class ControllableCamera : ICamera, ICascadeCamera
 {
     float rotX = 0;
     float rotY = 0;
+
+    public float[] CascadeStops = new float[] { 0.01f, 10f, 35f, 100f };
+    public int Cascades => CascadeStops.Length;
 
     public float Order { get; set; } = 0;
     public bool Active { get; set; } = true;
 
     public Color Background { get; set; } = Color.MediumPurple;
-    public RectangleF ViewportRectangle { get; set; } = new RectangleF(0, 0, 1, 1);
-    //public IRenderingPipeline RenderingPipeline { get; set; } = new EditorPipeline();
+    public Viewport Viewport { get; private set; }
+    float Aspect => (float)Viewport.Width / Viewport.Height;
 
     public float FieldOfView { get; set; } = 85;
     public Vector3 Position { get; set; } = Vector3.Zero;
@@ -23,11 +27,22 @@ public class ControllableCamera : ICamera
                 Position + Vector3.Transform(Vector3.ForwardRH, Rotation),
                 Vector3.Up);
 
-    public Matrix Projection(float aspect) => Matrix.PerspectiveFovRH(
-                MathUtil.DegreesToRadians(FieldOfView) / aspect,
-                aspect,
-                0.01f,
-                100f);
+    public Matrix Projection => GetProjection(CascadeStops[0], CascadeStops[^1]);
+
+    Matrix GetProjection(float from, float to)
+        => Matrix.PerspectiveFovRH(
+            MathUtil.DegreesToRadians(FieldOfView) / Aspect,
+            Aspect,
+            from,
+            to);
+
+    public Matrix GetProjectionCascade(int cascade)
+    {
+        if (cascade >= CascadeStops.Length || cascade < 0)
+            throw new System.ArgumentException("Cascade out of bounds", nameof(cascade));
+
+        return GetProjection(CascadeStops[cascade], CascadeStops[cascade + 1]);
+    }
 
     public void Rotate(Vector2 amount)
     {
@@ -50,4 +65,7 @@ public class ControllableCamera : ICamera
         Position = new Vector3(0, 1, 8);
         Rotation = Quaternion.RotationYawPitchRoll(0, 0, 0);
     }
+
+    public void SetTarget(Viewport viewport)
+        => Viewport = viewport;
 }

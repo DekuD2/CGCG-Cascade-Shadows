@@ -56,7 +56,7 @@ public class DirectXPresenter
     public float Aspect { get; private set; }
 
     // DirectX
-    public RenderingTexture Output { get; } = new RenderingTexture(ShaderUsage.ShaderResource | ShaderUsage.RenderTarget);
+    public RenderingTexture Output { get; } = new RenderingTexture(ShaderUsage.RenderTarget);
 
 
     void WindowSizeChanged()
@@ -68,20 +68,21 @@ public class DirectXPresenter
 
     public void Present()
     {
-        dxImageSource.Lock();
 
         // Synchronize surfaces
         // Is this necessary
+        dxImageSource.Lock();
+        //dxImageSource.RequestRender();
         Sync(IntPtr.Zero, false);
         // Redraw
         dxImageSource.AddDirtyRect(new Int32Rect(0, 0, dxImageSource.PixelWidth, dxImageSource.PixelHeight));
-
         dxImageSource.Unlock();
     }
 
+    SwapChain1 swapChain;
     public void Sync(IntPtr surface, bool isNewSurface)
     {
-        static Texture2D SurfaceToTexture2D(IntPtr surfacePtr)
+        Texture2D SurfaceToTexture2D(IntPtr surfacePtr)
         {
             var dxSurface = new Surface(surfacePtr);
             var dxgiResource = dxSurface.QueryInterface<SharpDX.DXGI.Resource>();
@@ -89,6 +90,23 @@ public class DirectXPresenter
 
             var dx11Resource = Devices.Device3D.OpenSharedResource<SharpDX.Direct3D11.Resource>(sharedHandle);
             var outputResource = dx11Resource.QueryInterface<Texture2D>();
+
+            //SwapChainDescription1 desc = new SwapChainDescription1()
+            //{
+            //    AlphaMode = AlphaMode.Ignore,
+            //    BufferCount = 2,
+            //    Usage = Usage.RenderTargetOutput,
+            //    Format = outputResource.Description.Format,
+            //    Height = outputResource.Description.Height,
+            //    Width = outputResource.Description.Width,
+            //    SampleDescription =
+            //    {
+            //        Count = 1
+            //    },
+            //    SwapEffect = SwapEffect.FlipSequential,
+            //};
+            //swapChain = new SwapChain1(Devices.DxgiFactory, Devices.Device3D, ref desc/*, restrictToOutput: output*/);
+            //var backBuffer = swapChain.GetBackBuffer<Texture2D>(0);
 
             dxgiResource.Dispose();
             dx11Resource.Dispose();
@@ -111,16 +129,20 @@ public class DirectXPresenter
             Height = wpfSurface.Description.Height;
             Aspect = Width / (float)Height;
 
+            // Try to make a swapchain? (for debug)
+
             Output.ReplaceTexture(new Texture2D(Devices.Device3D, wpfSurface.Description));
+            //dxImageSource.SetBackBuffer(System.Windows.Interop.D3DResourceType.IDirect3DSurface9, );
+            //Output.ReplaceTexture(swapChain.GetBackBuffer<Texture2D>(0));
 
             OutputResized?.Invoke();
-
-            // Try to make a swapchain? (for debug)
         }
         else // Present
         {
             // I kinda don't like that I don't have a swapchain now
-                Devices.Context3D.CopyResource(Output.Texture2D, wpfSurface);
+            //swapChain.Present(1, PresentFlags.None);
+            Devices.Context3D.CopyResource(Output.Texture2D, wpfSurface);
+            //dxImageSource.
             // dxImageSource.SetBackBuffer()?
             // I think it is done automatically but I have to make a back buffer or sth?
         }

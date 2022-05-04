@@ -24,11 +24,14 @@ public class InnerNode : RenderingNode
     {
         if (!Show) return;
 
+        //bool skip = Skip;
+        //if (!skip)
         transition.Enter(context);
 
         foreach (var child in children.FastFilterAndRemove(x => x.Alive))
             child.Render(context);
 
+        //if (!skip)
         transition.Exit(context);
     }
 
@@ -66,4 +69,5 @@ public class InnerNode : RenderingNode
     public static InnerNode Empty => new(TransitionStep.Empty);
 
     public override bool Show => transition.Show && children.Any(x => x.Show);
+    //public override bool Skip => false;
 }

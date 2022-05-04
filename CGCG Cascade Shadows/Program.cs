@@ -7,7 +7,6 @@ using Microsoft.Win32;
 
 using SharpDX;
 using SharpDX.Direct3D11;
-using SharpDX.DXGI;
 
 using System;
 using System.Collections.Generic;
@@ -45,7 +44,7 @@ public static class Program
         var presenter = viewModel.GetDirectXPresenter().Result;
         var renderer = new Renderer(presenter.Output);
         var ship = ResourceCache.Get<Mesh>(@"Models\ship_02.obj");
-        var ball = MeshGenerator.GenerateSphere(20, 20);
+        var ball = MeshGenerator.GenerateSphere(40, 40);
         var quad = MeshGenerator.GenerateQuad();
 
         MeshObject shipMO = new(ship, new Resources.Shaders.ComplexProgram.Material()
@@ -74,7 +73,7 @@ public static class Program
         var ballMO2 = new MeshObject(ball, new Resources.Shaders.SimpleProgram.Material()
         {
             Diffuse = Color.Blue,
-            Gloss = 0.0f,
+            Gloss = 0.5f,
             SpecularPower = 1f
         })
         {
@@ -174,10 +173,10 @@ public static class Program
             .Then(PointLightGate)
             .ThenDraw(Resources.Shaders.PointLightProgram.Draw);
 
-        DirectionalLight light = new(512, 512, new(new Vector3(0.01f, -1, -0.01f), Color.White, 0.4f))
+        DirectionalLight light = new(2048, 2048, new(new Vector3(0.01f, -1, -0.01f), Color.White, 0.4f))
         {
             Position = new(0, 100, 0),
-            Range = new(30, 30)
+            Range = new(50, 50)
         };
 
         renderer.Lights.Add(light);
@@ -265,151 +264,4 @@ public static class Program
             presenter.Present();
         }
     }
-}
-
-public class MeshObject
-{
-    public Vector3 Position = Vector3.Zero;
-    public Quaternion Rotation = Quaternion.Identity;
-    public Vector3 Scale = Vector3.One;
-
-    public Matrix Transform => Matrix.Scaling(Scale) * Matrix.RotationQuaternion(Rotation) * Matrix.Translation(Position);
-
-    RenderingInstructions instructions;
-
-    public MeshObject(Mesh mesh, IMaterial material)
-    {
-        instructions = DeferredPipeline.SurfacePass
-            .Set(material.ProgramStep)
-            .Then(material.MaterialStep)
-            .Then(GeometryData.Set(mesh))
-            .ThenDraw(Draw);
-    }
-
-    void Draw(DeviceContext1 context)
-    {
-        ConstantBuffers.UpdateTransform(context, Transform);
-        context.DrawLastGeometry();
-    }
-}
-
-public abstract class Light
-{
-    public abstract void Setup(DeviceContext1 context);
-    public abstract float Aspect { get; }
-    public abstract ICamera Camera { get; }
-}
-
-public abstract partial class BaseLight : Light
-{
-    static DepthStencilViewDescription DepthStencilViewDescription = new()
-    {
-        Format = Format.D24_UNorm_S8_UInt,
-        Dimension = DepthStencilViewDimension.Texture2D,
-        Texture2D = new DepthStencilViewDescription.Texture2DResource()
-        {
-            MipSlice = 0
-        }
-    };
-
-    static ShaderResourceViewDescription ShaderResourceViewDescription = new()
-    {
-        Format = Format.R24_UNorm_X8_Typeless,
-        Dimension = SharpDX.Direct3D.ShaderResourceViewDimension.Texture2D,
-        Texture2D = new ShaderResourceViewDescription.Texture2DResource()
-        {
-            MipLevels = 1,
-            MostDetailedMip = 0
-        }
-    };
-
-    public static (RenderingTexture, Viewport) CreateDepthTexture(int width, int height)
-    {
-        Viewport viewport = new(0, 0, width, height, 0f, 1f);
-        RenderingTexture renderingTexture = new(ShaderUsage.DepthStencil | ShaderUsage.ShaderResource)
-        {
-            DepthStencilViewDesc = DepthStencilViewDescription,
-            ShaderResourceViewDesc = ShaderResourceViewDescription
-        };
-
-        renderingTexture.ReplaceTexture(new Texture2D(Devices.Device3D, new()
-        {
-            Width = width,
-            Height = height,
-            Format = Format.R24G8_Typeless,
-            SampleDescription = new SampleDescription(count: 1, quality: 0),
-            BindFlags = BindFlags.DepthStencil | BindFlags.ShaderResource,
-            MipLevels = 1,
-            ArraySize = 1,
-            Usage = ResourceUsage.Default,
-            CpuAccessFlags = CpuAccessFlags.None,
-            OptionFlags = ResourceOptionFlags.None
-        }));
-
-        return (renderingTexture, viewport);
-    }
-    public override ICamera Camera => this;
-
-    public Vector3 Position { get; set; }
-}
-public abstract partial class BaseLight : ICamera
-{
-    public bool Active => true;
-    public float Order => 1;
-    public Color Background => new(0f, 0f, 0f, 0f);
-    public RectangleF ViewportRectangle => new(0, 0, 1, 1);
-
-    public abstract Matrix View { get; }
-    public abstract Matrix Projection(float aspect);
-}
-
-public partial class DirectionalLight : BaseLight
-{
-    public Resources.Shaders.DirectionalLightProgram.LightParameters LightParams;
-
-    readonly RenderingInstructions lightInstructions;
-    readonly Viewport viewport;
-    readonly RenderingTexture lightTexture;
-
-    public DirectionalLight(
-        int texWidth, int texHeight,
-        Resources.Shaders.DirectionalLightProgram.LightParameters lightParams)
-    {
-        (lightTexture, viewport) = CreateDepthTexture(texWidth, texHeight);
-
-        LightParams = lightParams;
-
-        lightInstructions = DeferredPipeline.LightPass
-            .Set(Resources.Shaders.DirectionalLightProgram.Set)
-            .Then(c =>
-            {
-                LightParams.Set(c);
-                c.PixelShader.SetShaderResource(10, lightTexture.ShaderResourceView);
-            })
-            .Then(Gate)
-            .ThenDraw(Resources.Shaders.DirectionalLightProgram.Draw);
-    }
-
-    public ShaderResourceView ShaderResourceView => lightTexture.ShaderResourceView!;
-    public TransitionGate Gate { get; } = new();
-
-    public override void Setup(DeviceContext1 context)
-    {
-        // TEMP??
-        LightParams.SetProjection(ref LightParams, View * Projection(Aspect));
-
-        context.ClearDepthStencilView(lightTexture.DepthStencilView, DepthStencilClearFlags.Depth, 1f, 0);
-        context.Rasterizer.SetViewport(viewport);
-        context.OutputMerger.SetRenderTargets(lightTexture.DepthStencilView);
-    }
-
-    public Vector2 Range { get; set; } = new(250, 250);
-    public override float Aspect => Range.X / Range.Y;
-
-    public override Matrix View => Matrix.LookAtRH(
-                Position,
-                Position + LightParams.Direction,
-                LightParams.Direction.X == 0 && LightParams.Direction.Z == 0 ? Vector3.ForwardRH : Vector3.Up);
-    public override Matrix Projection(float aspect)
-        => Matrix.OrthoRH(Range.X, Range.Y, 0.01f, 250f);
 }

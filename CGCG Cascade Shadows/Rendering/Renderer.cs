@@ -1,4 +1,7 @@
-﻿using SharpDX;
+﻿using FR.CascadeShadows.Rendering.Cameras;
+
+using SharpDX;
+using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 
 using System.Collections.Generic;
@@ -48,19 +51,37 @@ public class Renderer
     {
         //Context3D.ClearRenderTargetView(target.RenderTargetView, new(0, 0, 0, 1));
 
+        // Temporal optimization
+        Context3D.SetShadowMode(true);
         // Cast shadows
         foreach (var light in Lights)
-        {
-            Context3D.ClearState();
-            ConstantBuffers.UpdateCamera(Context3D, light.Camera, light.Aspect, PassType.Shadows);
-            light.Setup(Context3D);
-            DeferredPipeline.SurfacePass.Render(Context3D); // HACK: depends on specific pipeline :c
-        }
+            light.Render(Context3D);
 
-        ConstantBuffers.UpdateCamera(Context3D, Camera, Aspect, PassType.Normal);
 
+        Context3D.SetShadowMode(false);
         var viewport = new Viewport(0, 0, Width, Height, minDepth: 0, maxDepth: 1);
+        Camera.SetTarget(viewport);
+        ConstantBuffers.UpdateCamera(Context3D, Camera, PassType.Normal);
         Pipeline.Clear(Context3D, viewport);
         Pipeline.Render(Context3D, viewport, Color.Blue);
+    }
+}
+
+public interface IRenderPass
+{
+    void Render(DeviceContext1 context, Viewport viewport);
+}
+
+public class PipelinePass : IRenderPass
+{
+    private readonly IRenderingPipeline pipeline;
+
+    public PipelinePass(IRenderingPipeline pipeline)
+        => this.pipeline = pipeline;
+
+    public void Render(DeviceContext1 context, Viewport viewport)
+    {
+        pipeline.Clear(Context3D, viewport);
+        pipeline.Render(Context3D, viewport, Color.Blue);
     }
 }

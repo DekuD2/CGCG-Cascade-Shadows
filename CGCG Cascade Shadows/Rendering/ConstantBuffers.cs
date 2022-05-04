@@ -14,10 +14,10 @@ public static class ConstantBuffers
     static ICamera? currentCamera;
     static Matrix currentViewProjection = Matrix.Identity;
 
-    public static void UpdateCamera(DeviceContext1 context, ICamera camera, float aspect, PassType pass)
+    public static void UpdateCamera(DeviceContext1 context, ICamera camera, PassType pass)
     {
         currentCamera = camera;
-        currentViewProjection = currentCamera.View * currentCamera.Projection(aspect);
+        currentViewProjection = currentCamera.View * currentCamera.Projection;
 
         context.MapSubresource(Camera, MapMode.WriteDiscard, MapFlags.None, out var stream);
         stream.Write(camera.Position);

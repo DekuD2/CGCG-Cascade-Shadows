@@ -101,6 +101,5 @@ public class DeferredPipeline : IRenderingPipeline
         context.Rasterizer.SetViewport(viewport);
         context.OutputMerger.SetRenderTargets(DepthBuffer.DepthStencilView, Output.RenderTargetView);
         ForwardPass.Render(context);
-
     }
 }

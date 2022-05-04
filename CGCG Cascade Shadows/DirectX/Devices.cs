@@ -43,6 +43,8 @@ public static class Devices
     // Other
     public static DW.Factory DwFactory { get; private set; }
     public static WIC.ImagingFactory WicFactory { get; private set; }
+    public static DXGI.Device4 DxgiDevice { get; private set; }
+    public static DXGI.Factory4 DxgiFactory { get; private set; }
 
     static readonly FeatureLevel[] direct3DFeatureLevels = new FeatureLevel[]
     {
@@ -70,6 +72,10 @@ public static class Devices
             throw new NotSupportedException("DirectX 11.1 Device1 is not supported!");
         //Context3D = Device3D.ImmediateContext.QueryInterface<D3D11.DeviceContext1>(); // Try d3dDevice.ImmediateContext1
         Context3D = Device3D.ImmediateContext1.QueryInterface<D3D11.DeviceContext4>();
+
+        // NEW
+        DxgiDevice = Device3D.QueryInterface<DXGI.Device4>();
+        DxgiFactory = DxgiDevice.Adapter.GetParent<DXGI.Factory4>();
 
         // Create factories
         var debugLevel = DebugLevel.None;
