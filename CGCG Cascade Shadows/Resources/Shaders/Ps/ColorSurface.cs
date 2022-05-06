@@ -17,16 +17,12 @@ public static class ColorSurface
 
     public static void Set(DeviceContext1 context)
     {
-        if (context.IsShadowMode()) return;
-
         context.PixelShader.Set(Shader);
         context.PixelShader.SetConstantBuffer(0, ColorBuffer);
     }
 
     public static void SetParameters(DeviceContext1 context, Color3 diffuse, Color3 emission, float gloss, float specular)
     {
-        if (context.IsShadowMode()) return;
-
         context.MapSubresource(ColorBuffer, MapMode.WriteDiscard, MapFlags.None, out var stream);
         stream.Write(diffuse);
         stream.Write(gloss);

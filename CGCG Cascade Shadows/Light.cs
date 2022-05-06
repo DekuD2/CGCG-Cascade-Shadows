@@ -9,7 +9,7 @@ public abstract partial class Light
 {
     //public Vector3 Position { get; set; }
     //public abstract void Setup(DeviceContext1 context);
-    public abstract void Render(DeviceContext1 context);
+    public abstract void Render(DeviceContext1 context, ICamera camera);
     //public abstract float Aspect { get; }
     //public abstract ICamera Camera { get; }
 }

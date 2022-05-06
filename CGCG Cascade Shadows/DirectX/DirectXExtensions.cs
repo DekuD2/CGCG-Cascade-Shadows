@@ -11,7 +11,6 @@ public static class DirectXExtensions
 {
     static VertexShaderInfo? currentVertexShaderInfo;
     static GeometryData? currentGeometryData;
-    static bool shadowMode = false;
 
     // Returns object because it's only supposed to be used for comparing whether VertexBuffers are up to date by SetGeometry
     // Otherwise this should never be used
@@ -22,11 +21,6 @@ public static class DirectXExtensions
         vertexShaderStage.Set(vertexShaderInfo.Shader);
         currentVertexShaderInfo = vertexShaderInfo;
     }
-
-    public static void SetShadowMode(this DeviceContext1 vertexShaderStage, bool enabled)
-        => shadowMode = enabled;
-
-    public static bool IsShadowMode(this DeviceContext1 vertexShaderStage) => shadowMode;
 
     /// <summary>
     /// Sets vertex and index buffers from the <paramref name="geometry"/> based on the current <see cref="VertexShaderInfo"/>.
@@ -79,6 +73,4 @@ public static class DirectXExtensions
 
     internal static void SetActiveGeometry(GeometryData geometry)
         => currentGeometryData = geometry;
-
-
-}
+    }

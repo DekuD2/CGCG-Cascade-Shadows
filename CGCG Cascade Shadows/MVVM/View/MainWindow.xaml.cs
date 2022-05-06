@@ -37,6 +37,8 @@ public partial class MainWindow : Window
         viewModel = dataContext;
         dataContext.Error += MainViewModel_Error;
 
+        //PresentationSource.FromVisual(this).CompositionTarget.
+
         InitializeComponent();
     }
 

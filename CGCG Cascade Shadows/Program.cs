@@ -34,6 +34,11 @@ public static class Program
     [STAThread]
     public static void Main()
     {
+        // Create dual graph
+        // 1) Add event (XXX added)
+        // 2) Ignore all nodes except for geometry node
+        // 3) Replace geometry node with a new geometry node that has 
+
         Directory.SetCurrentDirectory("Resources");
 
         MainViewModel viewModel = new();
@@ -173,9 +178,9 @@ public static class Program
             .Then(PointLightGate)
             .ThenDraw(Resources.Shaders.PointLightProgram.Draw);
 
-        DirectionalLight light = new(2048, 2048, new(new Vector3(0.01f, -1, -0.01f), Color.White, 0.4f))
+        DirectionalLight light = new(512, 512, new(new Vector3(0.01f, -1, -0.01f), Color.White, 0.4f))
         {
-            Position = new(0, 100, 0),
+            //Position = new(0, 100, 0),
             Range = new(50, 50)
         };
 
@@ -189,6 +194,7 @@ public static class Program
 
         #region setup window interactions
         renderer.Camera.Position = new(1, 4, 10);
+        renderer.Camera.CascadeStops = new[] { 0.01f, 10f, 35f, 250f };
         viewModel.MoveCamera += x => renderer.Camera.Move(x);
         viewModel.RotateCamera += x => renderer.Camera.Rotate(x);
         viewModel.OutputChanged += i => outputIdx = i;

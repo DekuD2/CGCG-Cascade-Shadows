@@ -50,17 +50,14 @@ public class Renderer
     public void Render()
     {
         //Context3D.ClearRenderTargetView(target.RenderTargetView, new(0, 0, 0, 1));
-
-        // Temporal optimization
-        Context3D.SetShadowMode(true);
-        // Cast shadows
-        foreach (var light in Lights)
-            light.Render(Context3D);
-
-
-        Context3D.SetShadowMode(false);
         var viewport = new Viewport(0, 0, Width, Height, minDepth: 0, maxDepth: 1);
         Camera.SetTarget(viewport);
+
+        // Cast shadows
+        foreach (var light in Lights)
+            light.Render(Context3D, Camera);
+
+
         ConstantBuffers.UpdateCamera(Context3D, Camera, PassType.Normal);
         Pipeline.Clear(Context3D, viewport);
         Pipeline.Render(Context3D, viewport, Color.Blue);

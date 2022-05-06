@@ -16,12 +16,18 @@ public class MeshObject
     public Matrix Transform => Matrix.Scaling(Scale) * Matrix.RotationQuaternion(Rotation) * Matrix.Translation(Position);
 
     RenderingInstructions instructions;
+    RenderingInstructions shadowInstruction;
 
     public MeshObject(Mesh mesh, IMaterial material)
     {
         instructions = DeferredPipeline.SurfacePass
             .Set(material.ProgramStep)
             .Then(material.MaterialStep)
+            .Then(GeometryData.Set(mesh))
+            .ThenDraw(Draw);
+
+        shadowInstruction = DeferredPipeline.ShadowCastPass
+            .Set(Resources.Shaders.Vs.Depth.Set)
             .Then(GeometryData.Set(mesh))
             .ThenDraw(Draw);
     }

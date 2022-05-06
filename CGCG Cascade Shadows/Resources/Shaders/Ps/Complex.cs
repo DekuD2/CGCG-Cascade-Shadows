@@ -15,8 +15,6 @@ public static class Complex
 
     public static void Set(DeviceContext1 context)
     {
-        if (context.IsShadowMode()) return;
-
         context.PixelShader.Set(Shader);
         //context.PixelShader.SetConstantBuffer(0, MaterialBuffer);
     }
@@ -29,8 +27,6 @@ public static class Complex
         SRV? emission,
         SRV? specular)
     {
-        if (context.IsShadowMode()) return;
-
         context.PixelShader.SetShaderResource(0, diffuse);  //Texture2D diffuseTexture : register(t0);
         context.PixelShader.SetShaderResource(1, normal);   //Texture2D normalTexture : register(t1);
         context.PixelShader.SetShaderResource(2, glossy);   //Texture2D glossyTexture : register(t2);

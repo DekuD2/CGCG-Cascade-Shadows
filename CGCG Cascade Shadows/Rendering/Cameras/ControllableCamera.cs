@@ -3,13 +3,13 @@ using SharpDX;
 
 namespace FR.CascadeShadows.Rendering.Cameras;
 
-public partial class ControllableCamera : ICamera, ICascadeCamera
+public partial class ControllableCamera : ICascadeCamera
 {
     float rotX = 0;
     float rotY = 0;
 
     public float[] CascadeStops = new float[] { 0.01f, 10f, 35f, 100f };
-    public int Cascades => CascadeStops.Length;
+    public int Cascades => CascadeStops.Length - 1;
 
     public float Order { get; set; } = 0;
     public bool Active { get; set; } = true;
@@ -38,7 +38,7 @@ public partial class ControllableCamera : ICamera, ICascadeCamera
 
     public Matrix GetProjectionCascade(int cascade)
     {
-        if (cascade >= CascadeStops.Length || cascade < 0)
+        if (cascade >= Cascades || cascade < 0)
             throw new System.ArgumentException("Cascade out of bounds", nameof(cascade));
 
         return GetProjection(CascadeStops[cascade], CascadeStops[cascade + 1]);

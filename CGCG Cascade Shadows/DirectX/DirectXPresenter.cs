@@ -1,12 +1,16 @@
 ﻿using Microsoft.Wpf.Interop.DirectX;
 
+using SharpDX;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 
 using System;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+
+//using SwapChainPanel = Windows.UI.Xaml.Controls.SwapChainPanel;
 
 namespace FR.CascadeShadows;
 
@@ -19,7 +23,10 @@ public class DirectXPresenter
     // DirectX
     readonly D3D11Image dxImageSource = new();
     readonly Image dxImage;
+    //readonly SwapChainPanel swapChainPanel = new();
     Texture2D? wpfSurface;
+
+    TimeSpan lastRender = TimeSpan.Zero;
 
     public DirectXPresenter(ContentPresenter target)
     {
@@ -30,6 +37,8 @@ public class DirectXPresenter
         target.SizeChanged += (s, e) => WindowSizeChanged();
         dxImageSource.WindowOwner = new System.Windows.Interop.WindowInteropHelper(window).Handle;
         dxImageSource.OnRender = Sync;
+
+        CompositionTarget.Rendering += (s, e) => dxImageSource.RequestRender();
 
         WindowSizeChanged();
 
@@ -68,18 +77,17 @@ public class DirectXPresenter
 
     public void Present()
     {
-
         // Synchronize surfaces
         // Is this necessary
         dxImageSource.Lock();
         //dxImageSource.RequestRender();
-        Sync(IntPtr.Zero, false);
+        //Sync(IntPtr.Zero, false);
         // Redraw
         dxImageSource.AddDirtyRect(new Int32Rect(0, 0, dxImageSource.PixelWidth, dxImageSource.PixelHeight));
         dxImageSource.Unlock();
     }
 
-    SwapChain1 swapChain;
+    SwapChain2 swapChain;
     public void Sync(IntPtr surface, bool isNewSurface)
     {
         Texture2D SurfaceToTexture2D(IntPtr surfacePtr)
@@ -105,7 +113,12 @@ public class DirectXPresenter
             //    },
             //    SwapEffect = SwapEffect.FlipSequential,
             //};
-            //swapChain = new SwapChain1(Devices.DxgiFactory, Devices.Device3D, ref desc/*, restrictToOutput: output*/);
+            //var swapChain1 = new SwapChain1(Devices.DxgiFactory, Devices.Device3D, ref desc/*, restrictToOutput: output*/);
+            //swapChain = swapChain1.QueryInterface<SwapChain2>();
+
+            //using (ISwapChainPanelNative native = ComObject.As<ISwapChainPanelNative>(null))
+            //    native.SwapChain = swapChain;
+
             //var backBuffer = swapChain.GetBackBuffer<Texture2D>(0);
 
             dxgiResource.Dispose();
@@ -113,8 +126,6 @@ public class DirectXPresenter
 
             return outputResource;
         }
-
-        Devices.Context3D.Flush(); // Force the rendering to finish
 
         if (isNewSurface || wpfSurface == null) // Create a new surface
         {
@@ -129,6 +140,7 @@ public class DirectXPresenter
             Height = wpfSurface.Description.Height;
             Aspect = Width / (float)Height;
 
+            Debug.WriteLine("Resizing");
             // Try to make a swapchain? (for debug)
 
             Output.ReplaceTexture(new Texture2D(Devices.Device3D, wpfSurface.Description));
@@ -139,8 +151,9 @@ public class DirectXPresenter
         }
         else // Present
         {
-            // I kinda don't like that I don't have a swapchain now
-            //swapChain.Present(1, PresentFlags.None);
+            Devices.Context3D.Flush(); // Force the rendering to finish
+                                       // I kinda don't like that I don't have a swapchain now
+                                       //swapChain.Present(1, PresentFlags.None);
             Devices.Context3D.CopyResource(Output.Texture2D, wpfSurface);
             //dxImageSource.
             // dxImageSource.SetBackBuffer()?

@@ -32,6 +32,16 @@ public class DeferredPipeline : IRenderingPipeline
         c.OutputMerger.SetDepthStencilState(DepthStencilStates.Default);
     });
 
+    public static readonly InnerNode ShadowCastPass = new(c =>
+    {
+        // Rasterizer
+        c.Rasterizer.State = RasterizerStates.Default;
+
+        // Blending and DepthStencil settings
+        c.OutputMerger.SetBlendState(BlendStates.Default);
+        c.OutputMerger.SetDepthStencilState(DepthStencilStates.Default);
+    });
+
     public static readonly InnerNode LightPass = new(c =>
     {
         // Rasterizer
