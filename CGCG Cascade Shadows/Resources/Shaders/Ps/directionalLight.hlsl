@@ -9,6 +9,8 @@ static const float di = 0.8; // diffuse intensity
 static const float si = 0.6; // specular intensity
 static const float ai = 0.2; // ambient intensity
 
+const bool VISUALISE = false;
+
 cbuffer CameraBuffer : register(b0)
 {
 	float3 camera;
@@ -22,7 +24,7 @@ cbuffer LightBuffer : register(b1)
 	float3 lightColor;
 	float intensity;
 
-	matrix lightViewProjection;
+	matrix projections[3];
 };
 
 Texture2D positionTexture : register(t0);
@@ -34,6 +36,8 @@ Texture2D glossTexture : register(t5);
 Texture2D alphaTexture : register(t6);
 
 Texture2D shadowTexture : register(t10);
+Texture2D shadowTexture1 : register(t11);
+Texture2D shadowTexture2 : register(t12);
 
 SamplerState texSampler
 {
@@ -58,22 +62,71 @@ float4 Main(PsIn input) : SV_Target
 	float gloss = glossTexture.Sample(texSampler, input.uv).r;
 	float alpha = alphaTexture.Sample(texSampler, input.uv).r;
 
-	float4 lightSpacePos = mul(float4(position, 1), lightViewProjection);
-	float2 shadowMapCoords = float2(shadowMapCoords.x = 0.5 + (lightSpacePos.x / lightSpacePos.w * 0.5),
-									shadowMapCoords.y = 0.5 - (lightSpacePos.y / lightSpacePos.w * 0.5));
+	//float4 lightSpacePos = mul(float4(position, 1), projections[0]);
+	float4 lightSpacePos;
+	float2 shadowMapCoords;
+	float lightSpaceDepth;
 
-	float lightSpaceDepth = lightSpacePos.z / lightSpacePos.w;
+	int i;
+	for (i = 0; i < 3; i++)
+	{
+		lightSpacePos = mul(float4(position, 1), projections[i]);
+
+		shadowMapCoords = float2(0.5 + (lightSpacePos.x / lightSpacePos.w * 0.5),
+								 0.5 - (lightSpacePos.y / lightSpacePos.w * 0.5));
+
+		if (shadowMapCoords.x != saturate(shadowMapCoords.x)
+			|| shadowMapCoords.y != saturate(shadowMapCoords.y))
+		{
+			if (i == 3)
+			{
+				return float4(0, 0, 0, 0);
+			}
+			continue;
+		}
+
+		lightSpaceDepth = lightSpacePos.z / lightSpacePos.w;
+		if (lightSpaceDepth < 0)
+		{
+			// TODO: UNCOMMENT
+			//return float4(0, 0, 0, 0);
+		}
+
+		break;
+	}
+
+	//float2 shadowMapCoords = float2(0.5 + (lightSpacePos.x / lightSpacePos.w * 0.5),
+	//								0.5 - (lightSpacePos.y / lightSpacePos.w * 0.5));
+
+	//float lightSpaceDepth = lightSpacePos.z / lightSpacePos.w;
 
 	// Check if within the light
-	if (shadowMapCoords.x != saturate(shadowMapCoords.x)
+	/*if (shadowMapCoords.x != saturate(shadowMapCoords.x)
 		|| shadowMapCoords.y != saturate(shadowMapCoords.y)
 		|| lightSpaceDepth < 0)
-		return float4(0, 0, 0, 0);
+		return float4(0, 0, 0, 0);*/
 
 	float lightMapDepth = lightSpacePos.z / lightSpacePos.w;
 
-	float depthSample = shadowTexture.Sample(texSampler, shadowMapCoords).r;
+	float depthSample;
+	if (i == 0)
+		depthSample = shadowTexture.Sample(texSampler, shadowMapCoords).r;
+	else if (i == 1)
+		depthSample = shadowTexture1.Sample(texSampler, shadowMapCoords).r;
+	else
+		depthSample = shadowTexture2.Sample(texSampler, shadowMapCoords).r;
+
 	float depthDiff = lightSpaceDepth - depthSample;
+
+	if (VISUALISE)
+	{
+		if (i == 0)
+			return float4(0.5, 0, 0, 1);
+		else if (i == 1)
+			return float4(0, 0.5, 0, 1);
+		else
+			return float4(0, 0, 0.5, 1);
+	}
 
 	// return float4(pow(depthDiff, 1), 0, 0, 1);
 	// float cmp = shadowTexture.SampleCmpLevelZero(texSampler, shadowMapCoords, depth + 0.01);
@@ -102,6 +155,6 @@ float4 Main(PsIn input) : SV_Target
 		return float4(color, alpha);
 	}
 	else
-		//return float4(right * 1, up * 1, 0, 0);
 		return float4(0, 0, 0, 0);
+	//return float4(right * 1, up * 1, 0, 0);
 }

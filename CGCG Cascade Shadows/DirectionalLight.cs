@@ -9,13 +9,15 @@ using System.Linq;
 
 namespace FR.CascadeShadows;
 
+record Cascade(Viewport Viewport, RenderingTexture Texture);
+
 public partial class DirectionalLight : Light
 {
     public Resources.Shaders.DirectionalLightProgram.LightParameters LightParams;
 
     readonly RenderingInstructions lightInstructions;
-    readonly Viewport viewport;
-    readonly RenderingTexture lightTexture;
+
+    readonly Cascade[] cascades = new Cascade[3];
 
     public Vector3 Source { get; set; } = new(0, 100, 0);
 
@@ -23,7 +25,11 @@ public partial class DirectionalLight : Light
         int texWidth, int texHeight,
         Resources.Shaders.DirectionalLightProgram.LightParameters lightParams)
     {
-        (lightTexture, viewport) = CreateDepthTexture(texWidth, texHeight);
+        for (int i = 0; i < cascades.Length; i++)
+        {
+            var (lightTexture, viewport) = CreateDepthTexture(texWidth, texHeight);
+            cascades[i] = new Cascade(viewport, lightTexture);
+        }
 
         LightParams = lightParams;
 
@@ -32,13 +38,15 @@ public partial class DirectionalLight : Light
             .Then(c =>
             {
                 LightParams.Set(c);
-                c.PixelShader.SetShaderResource(10, lightTexture.ShaderResourceView);
+                c.PixelShader.SetShaderResource(10, cascades[0].Texture.ShaderResourceView);
+                c.PixelShader.SetShaderResource(11, cascades[1].Texture.ShaderResourceView);
+                c.PixelShader.SetShaderResource(12, cascades[2].Texture.ShaderResourceView);
             })
             .Then(Gate)
             .ThenDraw(Resources.Shaders.DirectionalLightProgram.Draw);
     }
 
-    public ShaderResourceView ShaderResourceView => lightTexture.ShaderResourceView!;
+    public ShaderResourceView ShaderResourceView => cascades[0].Texture.ShaderResourceView!;
     public TransitionGate Gate { get; } = new();
 
     //public override void Setup(DeviceContext1 context)
@@ -50,6 +58,8 @@ public partial class DirectionalLight : Light
     //    context.Rasterizer.SetViewport(viewport);
     //    context.OutputMerger.SetRenderTargets(lightTexture.DepthStencilView);
     //}
+
+    int n = 0;
 
     public override void Render(DeviceContext1 context, ICamera camera)
     {
@@ -68,17 +78,21 @@ public partial class DirectionalLight : Light
         };
 
         //context.ClearState();
-        lightCamera.SetTarget(viewport);
         //ConstantBuffers.UpdateCamera(context, lightCamera, PassType.Shadows);
+
+        // Last commented
+        //lightCamera.SetTarget(viewport);
 
         if (camera is ICascadeCamera cascadedCamera)
         {
-            foreach (var c in Enumerable.Range(0, 1/*cascadedCamera.Cascades*/))
+            foreach (var c in Enumerable.Range(0, Math.Min(3, cascadedCamera.Cascades)))
             {
+                lightCamera.SetTarget(cascades[c].Viewport);
+
                 Vector2 min = new(float.MaxValue);
                 Vector2 max = new(float.MinValue);
 
-                var corners = cascadedCamera.GetCorners(c).ToArray();
+                //var corners = cascadedCamera.GetCorners(c).ToArray();
 
                 // Find min and max
                 foreach (var corner in cascadedCamera.GetCorners(c))
@@ -86,6 +100,11 @@ public partial class DirectionalLight : Light
                     var lightSpaceCorner = Vector3.TransformCoordinate(corner, lightCamera.View);
                     min = Vector2.Min(min, new(lightSpaceCorner.X, lightSpaceCorner.Y));
                     max = Vector2.Max(max, new(lightSpaceCorner.X, lightSpaceCorner.Y));
+                }
+
+                if(n == 0)
+                {
+                    Debug.WriteLine($"{c}: {min} -> {max}");
                 }
 
                 // Set projection
@@ -97,20 +116,21 @@ public partial class DirectionalLight : Light
                 //    0.01f,
                 //    250f);
 
-                LightParams.SetProjection(ref LightParams, lightCamera.View * lightCamera.Projection);
+                LightParams.SetProjection(ref LightParams, lightCamera.View * lightCamera.Projection, c);
 
                 context.ClearState();
 
                 ConstantBuffers.UpdateCamera(context, lightCamera, PassType.Shadows);
 
-                context.ClearDepthStencilView(lightTexture.DepthStencilView, DepthStencilClearFlags.Depth, 1f, 0);
-                context.Rasterizer.SetViewport(viewport);
-                context.OutputMerger.SetRenderTargets(lightTexture.DepthStencilView);
+                context.ClearDepthStencilView(cascades[c].Texture.DepthStencilView, DepthStencilClearFlags.Depth, 1f, 0);
+                context.Rasterizer.SetViewport(cascades[c].Viewport);
+                context.OutputMerger.SetRenderTargets(cascades[c].Texture.DepthStencilView);
 
                 DeferredPipeline.ShadowCastPass.Render(context); // HACK: depends on specific pipeline :c
             }
         }
 
+        n++;
         //LightParams.SetProjection(ref LightParams, lightCamera.View * lightCamera.Projection);
 
         //context.ClearDepthStencilView(lightTexture.DepthStencilView, DepthStencilClearFlags.Depth, 1f, 0);

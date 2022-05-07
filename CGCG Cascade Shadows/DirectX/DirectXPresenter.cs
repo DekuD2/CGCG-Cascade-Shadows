@@ -119,6 +119,8 @@ public class DirectXPresenter
             //using (ISwapChainPanelNative native = ComObject.As<ISwapChainPanelNative>(null))
             //    native.SwapChain = swapChain;
 
+            //dxImageSource.SetBackBuffer(System.Windows.Interop.D3DResourceType.IDirect3DSurface9, );
+
             //var backBuffer = swapChain.GetBackBuffer<Texture2D>(0);
 
             dxgiResource.Dispose();
@@ -145,7 +147,6 @@ public class DirectXPresenter
 
             Output.ReplaceTexture(new Texture2D(Devices.Device3D, wpfSurface.Description));
             //dxImageSource.SetBackBuffer(System.Windows.Interop.D3DResourceType.IDirect3DSurface9, );
-            //Output.ReplaceTexture(swapChain.GetBackBuffer<Texture2D>(0));
 
             OutputResized?.Invoke();
         }

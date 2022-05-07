@@ -10,7 +10,7 @@ namespace FR.CascadeShadows.Resources.Shaders;
 public static class DirectionalLightProgram
 {
     static PixelShader PixelShader = ResourceCache.Get<PixelShader>(@"Shaders\Ps\directionalLight.hlsl");
-    public static readonly Buffer LightBuffer = new(Devices.Device3D, 64, ResourceUsage.Dynamic, BindFlags.ConstantBuffer, CpuAccessFlags.Write, ResourceOptionFlags.None, 0);
+    public static readonly Buffer LightBuffer = new(Devices.Device3D, 64 + 2 * 16 * 4, ResourceUsage.Dynamic, BindFlags.ConstantBuffer, CpuAccessFlags.Write, ResourceOptionFlags.None, 0);
 
     public static void Recompile()
     {
@@ -44,7 +44,14 @@ public static class DirectionalLightProgram
         private byte _p2 = 0;
         public Color3 Color;
         public float Intensity;
-        private Matrix LightViewProjection = Matrix.Identity;
+        private Matrix projection1 = Matrix.Identity;
+        private Matrix projection2 = Matrix.Identity;
+        private Matrix projection3 = Matrix.Identity;
+        // NEW
+        //public float Offset1; // the limiters
+        //public float Offset2; // I CAN'T MAN WTF IS WRONG WITH MY BRAIN
+        //[MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+        //private Matrix[] projections = new Matrix[2];
 
         public LightParameters(
             Vector3 direction,
@@ -56,10 +63,15 @@ public static class DirectionalLightProgram
             this.Intensity = intensity;
         }
 
-        public void SetProjection(ref LightParameters @this, Matrix lightViewProjection)
+        public void SetProjection(ref LightParameters @this, Matrix projection, int index = 0)
         {
             @this.CastShadow = true;
-            @this.LightViewProjection = Matrix.Transpose(lightViewProjection);
+            if (index == 0)
+                @this.projection1 = Matrix.Transpose(projection);
+            if (index == 1)
+                @this.projection2 = Matrix.Transpose(projection);
+            if (index == 2)
+                @this.projection3 = Matrix.Transpose(projection);
         }
 
         public void Set(DeviceContext1 context)
