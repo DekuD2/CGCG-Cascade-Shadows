@@ -18,6 +18,7 @@ public class MainViewModel : ObservableObject
     public ICommand MoveCameraCommand { get; init; }
     public ICommand RotateCameraCommand { get; init; }
     public ICommand ChangeOutputCommand { get; init; }
+    public ICommand ChangeSamplerCommand { get; init; }
     public ICommand ReloadShaderCommand { get; init; }
     public ICommand ToggleOnCommand { get; init; }
     public ICommand ToggleOffCommand { get; init; }
@@ -26,6 +27,7 @@ public class MainViewModel : ObservableObject
     public event Action<Vector3>? MoveCamera;
     public event Action<Vector2>? RotateCamera;
     public event Action<int>? OutputChanged;
+    public event Action<string>? SamplerChanged;
     public event Action<string>? ReloadShader;
     public event Action<string>? Error;
     public event Action<string, bool>? Toggle;
@@ -61,6 +63,11 @@ public class MainViewModel : ObservableObject
         {
             if (o is int idx)
                 OutputChanged?.Invoke(idx);
+        });
+
+        ChangeSamplerCommand = new RelayCommand(o =>
+        {
+            SamplerChanged?.Invoke(o?.ToString() ?? "null");
         });
 
         ReloadShaderCommand = new RelayCommand(o => ReloadShader?.Invoke(o?.ToString() ?? ""));

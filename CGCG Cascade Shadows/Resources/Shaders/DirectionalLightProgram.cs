@@ -19,6 +19,8 @@ public static class DirectionalLightProgram
             PixelShader = newShader;
     }
 
+    public static SamplerState Sampler = SamplerStates.Shadow;
+
     public static void Set(DeviceContext1 context)
     {
         Fullscreen.Prepare(context);
@@ -26,7 +28,8 @@ public static class DirectionalLightProgram
         context.PixelShader.Set(PixelShader);
         context.PixelShader.SetConstantBuffer(0, ConstantBuffers.Camera);
         context.PixelShader.SetConstantBuffer(1, LightBuffer);
-        context.PixelShader.SetSampler(0, SamplerStates.Default);
+        context.PixelShader.SetSampler(0, Sampler);
+        context.PixelShader.SetSampler(1, SamplerStates.ShadowComp);
     }
 
     public static void Draw(DeviceContext1 context)

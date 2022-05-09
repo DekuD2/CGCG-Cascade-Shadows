@@ -178,11 +178,12 @@ public static class Program
             .Then(PointLightGate)
             .ThenDraw(Resources.Shaders.PointLightProgram.Draw);
 
-        DirectionalLight light = new(2048, 2048, new(new Vector3(0.01f, -1, -0.01f), Color.White, 0.4f))
-        {
-            //Position = new(0, 100, 0),
-            Range = new(50, 50)
-        };
+        DirectionalLight light = new(
+            new(new Vector3(0.01f, -1, -0.01f), Color.White, 0.4f),
+            new CascadeDescription(0, 5, 2048, 2048),
+            new CascadeDescription(5, 20, 512, 512),
+            new CascadeDescription(20, float.PositiveInfinity, 4096, 4096)
+            );
 
         renderer.Lights.Add(light);
 
@@ -192,12 +193,15 @@ public static class Program
 
         int outputIdx = 0;
 
+        Stopwatch stopwatch = new();
+        var timer = Stopwatch.StartNew();
+
         #region setup window interactions
         renderer.Camera.Position = new(1, 4, 10);
-        renderer.Camera.CascadeStops = new[] { 0.01f, 5f, 20f, 250f };
         viewModel.MoveCamera += x => renderer.Camera.Move(x);
         viewModel.RotateCamera += x => renderer.Camera.Rotate(x);
         viewModel.OutputChanged += i => outputIdx = i;
+        viewModel.SamplerChanged += ViewModel_SamplerChanged;
         viewModel.ReloadShader += s =>
         {
             try
@@ -211,28 +215,40 @@ public static class Program
         };
         viewModel.Toggle += (name, show) =>
         {
-            var gate = name switch
+            if (name == "play")
             {
-                "ambient light" => AmbientLightGate,
-                "point light" => PointLightGate,
-                "directional light" => light.Gate,
-                _ => throw new Exception($"Unknown toggle ({name})")
-            };
-            gate.ShowNode = show;
+                if (show)
+                    timer.Start();
+                else
+                    timer.Stop();
+            }
+            else if (name == "texelSnap")
+            {
+                DirectionalLight.TexelSnapping = show;
+            }
+            else
+            {
+                var gate = name switch
+                {
+                    "ambient light" => AmbientLightGate,
+                    "point light" => PointLightGate,
+                    "directional light" => light.Gate,
+                    _ => throw new Exception($"Unknown toggle ({name})")
+                };
+                gate.ShowNode = show;
+            }
         };
         #endregion
 
         Queue<TimeSpan> snapshots = new(Enumerable.Repeat(TimeSpan.Zero, 60));
-        Stopwatch stopwatch = new();
         //int framesInASecond
 
-        var timer = Stopwatch.StartNew();
 
         while (true)
         {
             // Scene dynamics
-            light.LightParams.Direction.Z = (float)Math.Sin(timer.ElapsedMilliseconds / 1000f) * 0.02f;
-            light.LightParams.Direction.X = (float)Math.Cos(timer.ElapsedMilliseconds / 1000f) * 0.02f;
+            //light.LightParams.Direction.Z = (float)Math.Sin(timer.ElapsedMilliseconds / 1000f) * 0.02f;
+            //light.LightParams.Direction.X = (float)Math.Cos(timer.ElapsedMill^iseconds / 1000f) * 0.02f;
 
             ballPos.Z = (float)Math.Sin(timer.ElapsedMilliseconds / 1400f) * 2f;
             ballMO.Position.Z = (float)Math.Sin(timer.ElapsedMilliseconds / 1400f) * 2f;
@@ -264,10 +280,36 @@ public static class Program
                     renderer.output.Description.Width,
                     renderer.output.Description.Height,
                     exponent: 1f);
+            else if (outputIdx is 9)
+                RenderUtils.CopyTexture(Devices.Context3D,
+                    light.ShaderResourceView1,
+                    renderer.output.RenderTargetView!,
+                    renderer.output.Description.Width,
+                    renderer.output.Description.Height,
+                    exponent: 1f);
+            else if (outputIdx is 10)
+                RenderUtils.CopyTexture(Devices.Context3D,
+                    light.ShaderResourceView2,
+                    renderer.output.RenderTargetView!,
+                    renderer.output.Description.Width,
+                    renderer.output.Description.Height,
+                    exponent: 1f);
 
             // Other
             WpfDispatcher.ProcessMessages();
             presenter.Present();
         }
+    }
+
+    private static void ViewModel_SamplerChanged(string sampler)
+    {
+        Debug.WriteLine(sampler);
+        Resources.Shaders.DirectionalLightProgram.Sampler = sampler switch
+        {
+            "MinMagMipLinear" => SamplerStates.Shadow,
+            "MinMagMipPoint" => SamplerStates.Point,
+            "Anisotropic" => SamplerStates.Anisotropic,
+            _ => SamplerStates.Default
+        };
     }
 }

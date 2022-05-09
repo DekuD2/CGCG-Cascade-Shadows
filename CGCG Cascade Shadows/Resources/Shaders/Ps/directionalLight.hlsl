@@ -9,7 +9,9 @@ static const float di = 0.8; // diffuse intensity
 static const float si = 0.6; // specular intensity
 static const float ai = 0.2; // ambient intensity
 
-const bool VISUALISE = false;
+static const bool VISUALISE = false;
+static const bool VISUALISE_AFTER = true;
+static const float DEPTH_BIAS = 0.001;
 
 cbuffer CameraBuffer : register(b0)
 {
@@ -24,7 +26,7 @@ cbuffer LightBuffer : register(b1)
 	float3 lightColor;
 	float intensity;
 
-	matrix projections[3];
+	matrix proyections[3];
 };
 
 Texture2D positionTexture : register(t0);
@@ -39,17 +41,33 @@ Texture2D shadowTexture : register(t10);
 Texture2D shadowTexture1 : register(t11);
 Texture2D shadowTexture2 : register(t12);
 
-SamplerState texSampler
-{
-	Filter = MIN_MAG_MIP_LINEAR;
-	AddressU = Wrap;
-	AddressV = Wrap;
-};
+SamplerState texSampler : register(s0);
+SamplerComparisonState texCompSampler : register(s1);
 
 
 float Shlick(float c, float3 l, float3 h)
 {
 	return c + (1 - c) * pow(1 - dot(l, h), 5);
+}
+
+float SampleShadow(int index, float2 uv)
+{
+	if (index == 0)
+		return shadowTexture.Sample(texSampler, uv).r;
+	else if (index == 1)
+		return shadowTexture1.Sample(texSampler, uv).r;
+	else
+		return shadowTexture2.Sample(texSampler, uv).r;
+}
+
+float SampleShadowOffset(int index, float2 uv, int2 offset)
+{
+	if (index == 0)
+		return shadowTexture.Sample(texSampler, uv, offset).r;
+	else if (index == 1)
+		return shadowTexture1.Sample(texSampler, uv, offset).r;
+	else
+		return shadowTexture2.Sample(texSampler, uv, offset).r;
 }
 
 float4 Main(PsIn input) : SV_Target
@@ -62,15 +80,15 @@ float4 Main(PsIn input) : SV_Target
 	float gloss = glossTexture.Sample(texSampler, input.uv).r;
 	float alpha = alphaTexture.Sample(texSampler, input.uv).r;
 
-	//float4 lightSpacePos = mul(float4(position, 1), projections[0]);
 	float4 lightSpacePos;
 	float2 shadowMapCoords;
 	float lightSpaceDepth;
 
+	// Find the currect cascade
 	int i;
 	for (i = 0; i < 3; i++)
 	{
-		lightSpacePos = mul(float4(position, 1), projections[i]);
+		lightSpacePos = mul(float4(position, 1), proyections[i]);
 
 		shadowMapCoords = float2(0.5 + (lightSpacePos.x / lightSpacePos.w * 0.5),
 								 0.5 - (lightSpacePos.y / lightSpacePos.w * 0.5));
@@ -85,38 +103,40 @@ float4 Main(PsIn input) : SV_Target
 			continue;
 		}
 
-		lightSpaceDepth = lightSpacePos.z / lightSpacePos.w;
+		lightSpaceDepth = (lightSpacePos.z / lightSpacePos.w);
 		if (lightSpaceDepth < 0)
 		{
 			// TODO: UNCOMMENT
-			//return float4(0, 0, 0, 0);
+			return float4(0, 0, 0, 0);
 		}
 
 		break;
 	}
 
-	//float2 shadowMapCoords = float2(0.5 + (lightSpacePos.x / lightSpacePos.w * 0.5),
-	//								0.5 - (lightSpacePos.y / lightSpacePos.w * 0.5));
+	// Sample depth
+	float depthSample = SampleShadow(i, shadowMapCoords);
+	float depthDiff = lightSpaceDepth - depthSample - DEPTH_BIAS;
 
-	//float lightSpaceDepth = lightSpacePos.z / lightSpacePos.w;
+	depthDiff = shadowTexture1.SampleCmpLevelZero(texCompSampler, shadowMapCoords, lightSpaceDepth - 10000);
+	// return float4(shadowTexture1.Sample(texSampler, shadowMapCoords).r, 0, 0, 1);
+	// return float4(depthDiff, depthDiff, depthDiff, 1);
 
-	// Check if within the light
-	/*if (shadowMapCoords.x != saturate(shadowMapCoords.x)
-		|| shadowMapCoords.y != saturate(shadowMapCoords.y)
-		|| lightSpaceDepth < 0)
-		return float4(0, 0, 0, 0);*/
+	// Calculate depth percentage
+	float depthPercentage = 0;
+	for (int x = -1.5; x <= 1.5; x += 1.0)
+	{
+		for (int y = -1.5; y <= 1.5; y += 1.0)
+		{
+			depthPercentage += sign(saturate(lightSpaceDepth - SampleShadowOffset(i, shadowMapCoords, int2(x, y)) - DEPTH_BIAS));
+			// TODO: use depth ddx/ddy here
+		}
+	}
+	depthPercentage = 1 - (depthPercentage / 16.0);
 
-	float lightMapDepth = lightSpacePos.z / lightSpacePos.w;
+	// UNCOMMENTING THIS DISABLES PCF
+	//depthPercentage = 1 - sign(depthDiff);
 
-	float depthSample;
-	if (i == 0)
-		depthSample = shadowTexture.Sample(texSampler, shadowMapCoords).r;
-	else if (i == 1)
-		depthSample = shadowTexture1.Sample(texSampler, shadowMapCoords).r;
-	else
-		depthSample = shadowTexture2.Sample(texSampler, shadowMapCoords).r;
-
-	float depthDiff = lightSpaceDepth - depthSample;
+	// return float4(depthPercentage, depthPercentage, depthPercentage, 1);
 
 	if (VISUALISE)
 	{
@@ -128,10 +148,7 @@ float4 Main(PsIn input) : SV_Target
 			return float4(0, 0, 0.5, 1);
 	}
 
-	// return float4(pow(depthDiff, 1), 0, 0, 1);
-	// float cmp = shadowTexture.SampleCmpLevelZero(texSampler, shadowMapCoords, depth + 0.01);
-
-	if (!castShadow || depthDiff < 0.001) // or not in shadow
+	if (!castShadow || depthPercentage > 0) // or not in shadow
 	{
 		// Calculate light normally
 		normal = normalize(normal);
@@ -152,7 +169,16 @@ float4 Main(PsIn input) : SV_Target
 
 		color += pow(refDot, specular) * /*gloss * //replaced with fresnel*/ lightColor * attenuation * fresnel; // specular
 
-		return float4(color, alpha);
+		if (VISUALISE_AFTER)
+		{
+			if (i == 0)
+				color *= float3(0.7, 0.3, 0.3);
+			else if (i == 1)
+				color *= float3(0.3, 0.7, 0.3);
+			else
+				color *= float3(0.3, 0.3, 0.7);
+		}
+		return float4(color * depthPercentage, alpha);
 	}
 	else
 		return float4(0, 0, 0, 0);

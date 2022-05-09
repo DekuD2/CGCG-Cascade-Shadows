@@ -28,6 +28,13 @@
                                        CommandParameter="{Binding ElementName=outputSelect, Path=SelectedIndex}"/>
             </b:EventTrigger>
 
+            <b:EventTrigger SourceName="samplerSelect"
+                            EventName="SelectionChanged">
+                <b:InvokeCommandAction Command="{Binding ChangeSamplerCommand}"
+                                       CommandParameter="{Binding ElementName=samplerSelect, Path=Text}"/>
+            </b:EventTrigger>
+
+
             <b:EventTrigger SourceName="ambientLightCb"
                             EventName="Checked">
                 <b:InvokeCommandAction Command="{Binding ToggleOnCommand}"
@@ -60,6 +67,28 @@
                             EventName="Unchecked">
                 <b:InvokeCommandAction Command="{Binding ToggleOffCommand}"
                                        CommandParameter="directional light"/>
+            </b:EventTrigger>
+
+            <b:EventTrigger SourceName="playCb"
+                            EventName="Checked">
+                <b:InvokeCommandAction Command="{Binding ToggleOnCommand}"
+                                       CommandParameter="play"/>
+            </b:EventTrigger>
+            <b:EventTrigger SourceName="playCb"
+                            EventName="Unchecked">
+                <b:InvokeCommandAction Command="{Binding ToggleOffCommand}"
+                                       CommandParameter="play"/>
+            </b:EventTrigger>
+
+            <b:EventTrigger SourceName="texelSnapCb"
+                            EventName="Checked">
+                <b:InvokeCommandAction Command="{Binding ToggleOnCommand}"
+                                       CommandParameter="texelSnap"/>
+            </b:EventTrigger>
+            <b:EventTrigger SourceName="texelSnapCb"
+                            EventName="Unchecked">
+                <b:InvokeCommandAction Command="{Binding ToggleOffCommand}"
+                                       CommandParameter="texelSnap"/>
             </b:EventTrigger>
         </b:Interaction.Triggers>
 
@@ -71,7 +100,8 @@
         <StackPanel Grid.Row="1"
                     Orientation="Horizontal">
             <ComboBox x:Name="outputSelect"
-                      Width="120">
+                      Width="120"
+                      VerticalContentAlignment="Center">
                 <ComboBoxItem Content="Default" IsSelected="True"/>
                 <ComboBoxItem Content="Surface position"/>
                 <ComboBoxItem Content="Surface albedo"/>
@@ -80,7 +110,9 @@
                 <ComboBoxItem Content="Surface specular"/>
                 <ComboBoxItem Content="Surface gloss"/>
                 <ComboBoxItem Content="Depth buffer"/>
-                <ComboBoxItem Content="Light 1 output"/>
+                <ComboBoxItem Content="Light cascade 1"/>
+                <ComboBoxItem Content="Light cascade 2"/>
+                <ComboBoxItem Content="Light cascade 3"/>
             </ComboBox>
 
             <Button Content="Reload directional light shader"
@@ -105,6 +137,26 @@
 
             <ToggleButton x:Name="directionalLightCb"
                           Content="Directional light"
+                          IsChecked="True"
+                          VerticalAlignment="Center"
+                          Margin="5"/>
+            
+            <ComboBox x:Name="samplerSelect"
+                      Width="140"
+                      VerticalContentAlignment="Center">
+                <ComboBoxItem Content="MinMagMipLinear" IsSelected="True"/>
+                <ComboBoxItem Content="MinMagMipPoint"/>
+                <ComboBoxItem Content="Anisotropic"/>
+            </ComboBox>
+
+            <ToggleButton x:Name="texelSnapCb"
+                          Content="Texel snapping"
+                          IsChecked="True"
+                          VerticalAlignment="Center"
+                          Margin="5"/>
+            
+            <ToggleButton x:Name="playCb"
+                          Content="Animate"
                           IsChecked="True"
                           VerticalAlignment="Center"
                           Margin="5"/>

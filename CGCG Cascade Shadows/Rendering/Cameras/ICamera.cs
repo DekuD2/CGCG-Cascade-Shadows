@@ -8,7 +8,10 @@ public interface ICamera
     float Order { get; }
     Matrix View { get; }
     Matrix Projection { get; }
+    Matrix ProjectionSubfrustum(float near, float far);
     Vector3 Position { get; }
+    float Near { get; }
+    float Far { get; }
     Color Background { get; }
 
     Viewport Viewport { get; }

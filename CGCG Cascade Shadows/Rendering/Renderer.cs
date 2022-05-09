@@ -30,7 +30,7 @@ public class Renderer
     //   - buffer setup used for rendering
     //   * e.g. SurfacePass -> LightPass -> ForwardPass -> GizmoPass
 
-    public readonly ControllableCamera Camera = new();
+    public readonly ControllableCamera Camera = new(0.01f, 250f);
 
     public readonly RenderingTexture output;
     public readonly IRenderingPipeline Pipeline;
