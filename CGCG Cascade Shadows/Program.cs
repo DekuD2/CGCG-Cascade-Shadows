@@ -86,11 +86,23 @@ public static class Program
             Position = new(3, 2, 1)
         };
 
-        var quadMO = new MeshObject(quad, new Resources.Shaders.SimpleProgram.Material()
+        //var quadMO = new MeshObject(quad, new Resources.Shaders.SimpleProgram.Material()
+        //{
+        //    Diffuse = Color.White,
+        //    Gloss = 0.2f,
+        //    SpecularPower = 0.5f
+        //})
+        //{
+        //    Scale = new(10f),
+        //    Position = new(0, -5, 0),
+        //    Rotation = Quaternion.RotationYawPitchRoll(0f, -MathF.PI * 0.5f, 0f)
+        //};
+
+        var quadMO = new MeshObject(quad, new Resources.Shaders.ParallaxProgram.Material()
         {
-            Diffuse = Color.White,
-            Gloss = 0.2f,
-            SpecularPower = 0.5f
+            Diffuse = ResourceCache.Get<ShaderResourceView>(@"Textures\bricks2.jpg"),
+            Displacement = ResourceCache.Get<ShaderResourceView>(@"Textures\bricks2_disp.jpg"),
+            Normal = ResourceCache.Get<ShaderResourceView>(@"Textures\bricks2_normal.jpg"),
         })
         {
             Scale = new(10f),
@@ -206,7 +218,10 @@ public static class Program
         {
             try
             {
-                Resources.Shaders.DirectionalLightProgram.Recompile();
+                if (s == "directional light")
+                    Resources.Shaders.DirectionalLightProgram.Recompile();
+                else if (s == "parallax")
+                    Resources.Shaders.Ps.Parallax.Recompile();
             }
             catch (Exception e)
             {
@@ -248,7 +263,7 @@ public static class Program
         {
             // Scene dynamics
             //light.LightParams.Direction.Z = (float)Math.Sin(timer.ElapsedMilliseconds / 1000f) * 0.02f;
-            //light.LightParams.Direction.X = (float)Math.Cos(timer.ElapsedMill^iseconds / 1000f) * 0.02f;
+            //light.LightParams.Direction.X = (float)Math.Cos(timer.ElapsedMilliseconds / 1000f) * 0.02f;
 
             ballPos.Z = (float)Math.Sin(timer.ElapsedMilliseconds / 1400f) * 2f;
             ballMO.Position.Z = (float)Math.Sin(timer.ElapsedMilliseconds / 1400f) * 2f;

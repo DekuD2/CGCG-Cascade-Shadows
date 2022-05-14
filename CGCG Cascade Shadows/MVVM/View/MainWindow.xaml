@@ -115,13 +115,22 @@
                 <ComboBoxItem Content="Light cascade 3"/>
             </ComboBox>
 
-            <Button Content="Reload directional light shader"
+            <Button Content="Reload dirLight"
                     Command="{Binding ReloadShaderCommand}"
-                    CommandParameter="complex.hlsl"/>
+                    CommandParameter="directional light"/>
             
             <Button Content="Open"
                     Command="{Binding OpenFile}"
-                    CommandParameter="Shaders\Ps\directionalLight.hlsl"/>
+                    CommandParameter="Shaders\Ps\directionalLight.hlsl"
+                    Margin="0,0,5,0"/>
+
+            <Button Content="Reload parallax"
+                    Command="{Binding ReloadShaderCommand}"
+                    CommandParameter="parallax"/>
+
+            <Button Content="Open"
+                    Command="{Binding OpenFile}"
+                    CommandParameter="Shaders\Ps\parallax.hlsl"/>
 
             <ToggleButton x:Name="ambientLightCb"
                           Content="Ambient light"

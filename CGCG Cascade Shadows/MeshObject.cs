@@ -26,10 +26,16 @@ public class MeshObject
             .Then(GeometryData.Set(mesh))
             .ThenDraw(Draw);
 
-        shadowInstruction = DeferredPipeline.ShadowCastPass
-            .Set(Resources.Shaders.Vs.Depth.Set)
-            .Then(GeometryData.Set(mesh))
-            .ThenDraw(Draw);
+        if (material is IDepthMaterial depthMat)
+            shadowInstruction = DeferredPipeline.ShadowCastPass
+                .Set(depthMat.DepthStep)
+                .Then(GeometryData.Set(mesh))
+                .ThenDraw(Draw);
+        else
+            shadowInstruction = DeferredPipeline.ShadowCastPass
+                .Set(Resources.Shaders.Vs.Depth.Set)
+                .Then(GeometryData.Set(mesh))
+                .ThenDraw(Draw);
     }
 
     void Draw(DeviceContext1 context)

@@ -155,6 +155,17 @@ public static class MeshGenerator
                 new(0, 0, 1),
                 new(0, 0, 1),
             },
+            TangentBasis = new TangentBase[]
+            {
+                new(new(0, -1, 0), new(1, 0, 0)),
+                new(new(0, -1, 0), new(1, 0, 0)),
+                new(new(0, -1, 0), new(1, 0, 0)),
+                new(new(0, -1, 0), new(1, 0, 0))
+                //new(new(1, 0, 0), new(0, 1, 0)),
+                //new(new(1, 0, 0), new(0, 1, 0)),
+                //new(new(1, 0, 0), new(0, 1, 0)),
+                //new(new(1, 0, 0), new(0, 1, 0))
+            },
             TexCoordChannels = new Vector2[][]
             {
                 new Vector2[]

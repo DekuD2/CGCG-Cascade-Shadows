@@ -11,3 +11,8 @@ public interface IMaterial
     TransitionStep ProgramStep { get; }
     TransitionStep MaterialStep { get; }
 }
+
+public interface IDepthMaterial
+{
+    TransitionStep DepthStep { get; }
+}
