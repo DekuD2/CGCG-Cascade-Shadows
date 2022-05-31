@@ -10,7 +10,7 @@ namespace FR.CascadeShadows.Resources.Shaders;
 public static class DirectionalLightProgram
 {
     static PixelShader PixelShader = ResourceCache.Get<PixelShader>(@"Shaders\Ps\directionalLight.hlsl");
-    public static readonly Buffer LightBuffer = new(Devices.Device3D, 64 + 2 * 16 * 4, ResourceUsage.Dynamic, BindFlags.ConstantBuffer, CpuAccessFlags.Write, ResourceOptionFlags.None, 0);
+    public static readonly Buffer LightBuffer = new(Devices.Device3D, 8 * 16, ResourceUsage.Dynamic, BindFlags.ConstantBuffer, CpuAccessFlags.Write, ResourceOptionFlags.None, 0);
 
     public static void Recompile()
     {
@@ -40,16 +40,24 @@ public static class DirectionalLightProgram
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct LightParameters
     {
+        // First rule - pack 4 byters
+        // Second rule - never cross 16 bytes
         public Vector3 Direction;
         public bool CastShadow = false;
         private byte _p0 = 0;
         private byte _p1 = 0;
-        private byte _p2 = 0;
+        private byte _p2 = 0; // 16B
         public Color3 Color;
-        public float Intensity;
-        private Matrix projection1 = Matrix.Identity;
-        private Matrix projection2 = Matrix.Identity;
-        private Matrix projection3 = Matrix.Identity;
+        public float Intensity; // 16B
+        private Matrix projection1 = Matrix.Identity; // 16B
+        private Matrix projection2 = Matrix.Identity; // 16B
+        private Matrix projection3 = Matrix.Identity; // 16B
+        private float invRes1; // inverse resolutions
+        private Color3 _p4 = default;
+        private float invRes2;
+        private Color3 _p5 = default;
+        private float invRes3;
+        private Color3 _p6 = default;
         // NEW
         //public float Offset1; // the limiters
         //public float Offset2; // I CAN'T MAN WTF IS WRONG WITH MY BRAIN
@@ -58,12 +66,18 @@ public static class DirectionalLightProgram
 
         public LightParameters(
             Vector3 direction,
+            int res1,
+            int res2,
+            int res3,
             Color? color = null,
             float intensity = 0.3f)
         {
             this.Direction = direction;
             this.Color = color?.ToColor3() ?? Color3.White;
             this.Intensity = intensity;
+            this.invRes1 = 1 / (float)res1;
+            this.invRes2 = 1 / (float)res2;
+            this.invRes3 = 1 / (float)res3;
         }
 
         public void SetProjection(ref LightParameters @this, Matrix projection, int index = 0)

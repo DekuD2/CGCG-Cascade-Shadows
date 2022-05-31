@@ -34,10 +34,12 @@ public partial class DirectionalLight : Light
     public static bool TexelSnapping = true;
 
     public DirectionalLight(
-        Resources.Shaders.DirectionalLightProgram.LightParameters lightParams,
+        Vector3 direction,
+        Color color,
+        float intensity,
         params CascadeDescription[] descs)
     {
-        Debug.Assert(descs.Length <= 3);
+        Debug.Assert(descs.Length is <= 3 and >= 1);
 
         for (int i = 0; i < descs.Length; i++)
         {
@@ -45,7 +47,10 @@ public partial class DirectionalLight : Light
             this.cascades[i] = new Cascade(viewport, lightTexture, descs[i]);
         }
 
-        LightParams = lightParams;
+        int res1 = descs[0].TexHeight;
+        int res2 = descs.Length >= 2 ? descs[1].TexHeight : 1;
+        int res3 = descs.Length >= 3 ? descs[2].TexHeight : 1;
+        LightParams = new Resources.Shaders.DirectionalLightProgram.LightParameters(direction, res1, res2, res3, color, intensity);
 
         lightInstructions = DeferredPipeline.LightPass
             .Set(Resources.Shaders.DirectionalLightProgram.Set)

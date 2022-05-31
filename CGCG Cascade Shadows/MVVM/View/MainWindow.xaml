@@ -8,10 +8,14 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid Background="AliceBlue">
-        <Grid.RowDefinitions>
+        <!--<Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="auto"/>
-        </Grid.RowDefinitions>
+        </Grid.RowDefinitions>-->
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="auto"/>
+        </Grid.ColumnDefinitions>
         <d:Grid.DataContext>
             <local:MainViewModel/>
         </d:Grid.DataContext>
@@ -90,6 +94,17 @@
                 <b:InvokeCommandAction Command="{Binding ToggleOffCommand}"
                                        CommandParameter="texelSnap"/>
             </b:EventTrigger>
+
+            <b:EventTrigger SourceName="showParallaxCb"
+                            EventName="Checked">
+                <b:InvokeCommandAction Command="{Binding ToggleOnCommand}"
+                                       CommandParameter="parallax"/>
+            </b:EventTrigger>
+            <b:EventTrigger SourceName="showParallaxCb"
+                            EventName="Unchecked">
+                <b:InvokeCommandAction Command="{Binding ToggleOffCommand}"
+                                       CommandParameter="parallax"/>
+            </b:EventTrigger>
         </b:Interaction.Triggers>
 
         <!--<Label>Hi</Label>-->
@@ -97,78 +112,97 @@
                           MouseMove="renderingTarget_MouseMove"
                           MouseWheel="renderingTarget_MouseWheel"/>
 
-        <StackPanel Grid.Row="1"
-                    Orientation="Horizontal">
+        <StackPanel Grid.Column="1"
+                    Orientation="Vertical">
+
+            <ToggleButton x:Name="playCb"
+                          Content="Animate"
+                          IsChecked="True"
+                          VerticalAlignment="Center"
+                          Margin="5,5,5,0"/>
+
+            <Label>Show</Label>
             <ComboBox x:Name="outputSelect"
-                      Width="120"
+                      Margin="5,-3,5,5"
+                      HorizontalAlignment="Stretch"
                       VerticalContentAlignment="Center">
-                <ComboBoxItem Content="Default" IsSelected="True"/>
-                <ComboBoxItem Content="Surface position"/>
-                <ComboBoxItem Content="Surface albedo"/>
-                <ComboBoxItem Content="Surface normal"/>
-                <ComboBoxItem Content="Surface emission"/>
-                <ComboBoxItem Content="Surface specular"/>
-                <ComboBoxItem Content="Surface gloss"/>
+                <ComboBoxItem Content="Output" IsSelected="True"/>
+                <ComboBoxItem Content="GBuffer world position"/>
+                <ComboBoxItem Content="GBuffer albedo"/>
+                <ComboBoxItem Content="GBuffer normal"/>
+                <ComboBoxItem Content="GBuffer emission"/>
+                <ComboBoxItem Content="GBuffer specular"/>
+                <ComboBoxItem Content="GBuffer gloss"/>
                 <ComboBoxItem Content="Depth buffer"/>
                 <ComboBoxItem Content="Light cascade 1"/>
                 <ComboBoxItem Content="Light cascade 2"/>
                 <ComboBoxItem Content="Light cascade 3"/>
             </ComboBox>
 
-            <Button Content="Reload dirLight"
-                    Command="{Binding ReloadShaderCommand}"
-                    CommandParameter="directional light"/>
-            
-            <Button Content="Open"
-                    Command="{Binding OpenFile}"
-                    CommandParameter="Shaders\Ps\directionalLight.hlsl"
-                    Margin="0,0,5,0"/>
-
-            <Button Content="Reload parallax"
-                    Command="{Binding ReloadShaderCommand}"
-                    CommandParameter="parallax"/>
-
-            <Button Content="Open"
-                    Command="{Binding OpenFile}"
-                    CommandParameter="Shaders\Ps\parallax.hlsl"/>
-
+            <Label>Light</Label>
             <ToggleButton x:Name="ambientLightCb"
                           Content="Ambient light"
                           IsChecked="True"
                           VerticalAlignment="Center"
-                          Margin="5"/>
+                          Margin="5,-5,5,0"/>
 
             <ToggleButton x:Name="pointLightCb"
                           Content="Point light"
                           IsChecked="True"
                           VerticalAlignment="Center"
-                          Margin="5"/>
+                          Margin="5,0,5,0"/>
 
             <ToggleButton x:Name="directionalLightCb"
                           Content="Directional light"
                           IsChecked="True"
                           VerticalAlignment="Center"
-                          Margin="5"/>
-            
+                          Margin="5,0,5,5"/>
+
+            <Label>Directional light shader</Label>
+            <StackPanel Margin="5,-3,0,5" Orientation="Horizontal" HorizontalAlignment="Stretch">
+
+                <Button Content="Reload"
+                    Command="{Binding ReloadShaderCommand}"
+                    CommandParameter="directional light"/>
+
+                <Button Content="Open"
+                    Command="{Binding OpenFile}"
+                    CommandParameter="Shaders\Ps\directionalLight.hlsl"/>
+            </StackPanel>
+
+            <Label>Parallax shader</Label>
+            <StackPanel Margin="5,-3,0,5" Orientation="Horizontal" HorizontalAlignment="Stretch">
+
+                <Button Content="Reload"
+                    Command="{Binding ReloadShaderCommand}"
+                    CommandParameter="parallax"/>
+
+                <Button Content="Open"
+                    Command="{Binding OpenFile}"
+                    CommandParameter="Shaders\Ps\parallax.hlsl"/>
+
+                <ToggleButton x:Name="showParallaxCb"
+                          Content="Show"
+                          IsChecked="True"/>
+
+            </StackPanel>
+
+            <Label>Shadow sampler</Label>
             <ComboBox x:Name="samplerSelect"
-                      Width="140"
-                      VerticalContentAlignment="Center">
+                      HorizontalAlignment="Stretch"
+                      VerticalContentAlignment="Center"
+                      Margin="5,-5,5,0">
                 <ComboBoxItem Content="MinMagMipLinear" IsSelected="True"/>
                 <ComboBoxItem Content="MinMagMipPoint"/>
                 <ComboBoxItem Content="Anisotropic"/>
             </ComboBox>
 
+            <Label>Shadow options</Label>
             <ToggleButton x:Name="texelSnapCb"
                           Content="Texel snapping"
                           IsChecked="True"
                           VerticalAlignment="Center"
-                          Margin="5"/>
-            
-            <ToggleButton x:Name="playCb"
-                          Content="Animate"
-                          IsChecked="True"
-                          VerticalAlignment="Center"
-                          Margin="5"/>
+                          Margin="5,-5,5,0"/>
 
         </StackPanel>
 

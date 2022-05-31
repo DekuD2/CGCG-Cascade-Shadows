@@ -55,10 +55,10 @@ public static class Program
         MeshObject shipMO = new(ship, new Resources.Shaders.ComplexProgram.Material()
         {
             Diffuse = ResourceCache.Get<ShaderResourceView>(@"Models\Ship\ship_orange.png"),
-            Normal = ResourceCache.Get<ShaderResourceView>(@"Models\Ship\ship_normal.png"),
+            Normal = ResourceCache.Get<ShaderResourceView>(@"Models\Ship\ship_normal_l.png"),
             Emission = ResourceCache.Get<ShaderResourceView>(@"Models\Ship\ship_orange_emission.png"),
-            Specular = ResourceCache.Get<ShaderResourceView>(@"Models\Ship\ship_ior.png"),
-            Glossy = ResourceCache.Get<ShaderResourceView>(@"Models\Ship\ship_metallic2.png"),
+            Specular = ResourceCache.Get<ShaderResourceView>(@"Models\Ship\ship_ior_l.png"),
+            Glossy = ResourceCache.Get<ShaderResourceView>(@"Models\Ship\ship_metallic2_l.png"),
         })
         {
             Scale = new(0.05f)
@@ -75,7 +75,7 @@ public static class Program
             Position = new(0, 4, 0)
         };
 
-        var ballMO2 = new MeshObject(ball, new Resources.Shaders.SimpleProgram.Material()
+        var ball2MO = new MeshObject(ball, new Resources.Shaders.SimpleProgram.Material()
         {
             Diffuse = Color.Blue,
             Gloss = 0.5f,
@@ -86,23 +86,24 @@ public static class Program
             Position = new(3, 2, 1)
         };
 
-        //var quadMO = new MeshObject(quad, new Resources.Shaders.SimpleProgram.Material()
-        //{
-        //    Diffuse = Color.White,
-        //    Gloss = 0.2f,
-        //    SpecularPower = 0.5f
-        //})
-        //{
-        //    Scale = new(10f),
-        //    Position = new(0, -5, 0),
-        //    Rotation = Quaternion.RotationYawPitchRoll(0f, -MathF.PI * 0.5f, 0f)
-        //};
+        var quadBasicMO = new MeshObject(quad, new Resources.Shaders.SimpleProgram.Material()
+        {
+            Diffuse = Color.White,
+            Gloss = 0.2f,
+            SpecularPower = 0.5f
+        })
+        {
+            Scale = new(10f),
+            Position = new(0, -5, 0),
+            Rotation = Quaternion.RotationYawPitchRoll(0f, -MathF.PI * 0.5f, 0f)
+        };
+        quadBasicMO.Show = false;
 
-        var quadMO = new MeshObject(quad, new Resources.Shaders.ParallaxProgram.Material()
+        var quadParallaxMO = new MeshObject(quad, new Resources.Shaders.ParallaxProgram.Material()
         {
             Diffuse = ResourceCache.Get<ShaderResourceView>(@"Textures\bricks2.jpg"),
-            Displacement = ResourceCache.Get<ShaderResourceView>(@"Textures\bricks2_disp.jpg"),
-            Normal = ResourceCache.Get<ShaderResourceView>(@"Textures\bricks2_normal.jpg"),
+            Displacement = ResourceCache.Get<ShaderResourceView>(@"Textures\bricks2_disp_l.jpg"),
+            Normal = ResourceCache.Get<ShaderResourceView>(@"Textures\bricks2_normal_l.jpg"),
         })
         {
             Scale = new(10f),
@@ -110,8 +111,8 @@ public static class Program
             Rotation = Quaternion.RotationYawPitchRoll(0f, -MathF.PI * 0.5f, 0f)
         };
 
-        Vector3 ballPos = new(0, 4, 0);
-        float quadHeight = -10;
+        //Vector3 ballPos = new(0, 4, 0);
+        //float quadHeight = -10;
 
         #region old scene setup (maybe better because it's more obvoius whats going on?)
         //var shipInstr2 = DeferredPipeline.SurfacePass
@@ -191,12 +192,14 @@ public static class Program
             .ThenDraw(Resources.Shaders.PointLightProgram.Draw);
 
         DirectionalLight light = new(
-            new(new Vector3(0.01f, -1, -0.01f), Color.White, 0.4f),
+            new Vector3(0.05f, -1, -0.01f),
+            Color.White, 
+            0.4f,
             new CascadeDescription(0, 5, 2048, 2048),
             new CascadeDescription(5, 20, 512, 512),
             new CascadeDescription(20, float.PositiveInfinity, 4096, 4096)
             );
-
+        
         renderer.Lights.Add(light);
 
         //data.Position = Transform.World.TranslationVector;
@@ -241,6 +244,11 @@ public static class Program
             {
                 DirectionalLight.TexelSnapping = show;
             }
+            else if (name == "parallax")
+            {
+                quadParallaxMO.Show = show;
+                quadBasicMO.Show = !show;
+            }
             else
             {
                 var gate = name switch
@@ -265,11 +273,12 @@ public static class Program
             //light.LightParams.Direction.Z = (float)Math.Sin(timer.ElapsedMilliseconds / 1000f) * 0.02f;
             //light.LightParams.Direction.X = (float)Math.Cos(timer.ElapsedMilliseconds / 1000f) * 0.02f;
 
-            ballPos.Z = (float)Math.Sin(timer.ElapsedMilliseconds / 1400f) * 2f;
+            //ballPos.Z = (float)Math.Sin(timer.ElapsedMilliseconds / 1400f) * 2f;
             ballMO.Position.Z = (float)Math.Sin(timer.ElapsedMilliseconds / 1400f) * 2f;
 
-            quadHeight = -5 + (float)Math.Cos(timer.ElapsedMilliseconds / 1800f) * 5f;
-            quadMO.Position.Y = -5 + (float)Math.Cos(timer.ElapsedMilliseconds / 1800f) * 5f;
+            //quadHeight = -5 + (float)Math.Cos(timer.ElapsedMilliseconds / 1800f) * 5f;
+            quadParallaxMO.Position.Y = -5 + (float)Math.Cos(timer.ElapsedMilliseconds / 1800f) * 5f;
+            quadBasicMO.Position.Y = -5 + (float)Math.Cos(timer.ElapsedMilliseconds / 1800f) * 5f;
 
             // Render
             renderer.Render();

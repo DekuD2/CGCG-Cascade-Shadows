@@ -49,7 +49,7 @@ public static class SamplerStates
     static SamplerStateDescription ShadowCmpDesc
         => new()
         {
-            Filter = Filter.MinMagLinearMipPoint,
+            Filter = Filter.ComparisonMinMagMipLinear,
             AddressU = TextureAddressMode.Border,
             AddressV = TextureAddressMode.Border,
             AddressW = TextureAddressMode.Border,

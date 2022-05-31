@@ -37,16 +37,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Resources\Models\Ship\ship_glossy.png">
+    <None Update="Resources\Models\Ship\ship_glossy_l.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Models\Ship\ship_ior.png">
+    <None Update="Resources\Models\Ship\ship_ior_l.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Models\Ship\ship_metallic2.png">
+    <None Update="Resources\Models\Ship\ship_metallic2_l.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Models\Ship\ship_normal.png">
+    <None Update="Resources\Models\Ship\ship_normal_l.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Resources\Models\Ship\ship_orange.png">
@@ -112,10 +112,10 @@
     <None Update="Resources\Textures\bricks2.jpg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Textures\bricks2_disp.jpg">
+    <None Update="Resources\Textures\bricks2_disp_l.jpg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Textures\bricks2_normal.jpg">
+    <None Update="Resources\Textures\bricks2_normal_l.jpg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Resources\Textures\concrete.jpg">
