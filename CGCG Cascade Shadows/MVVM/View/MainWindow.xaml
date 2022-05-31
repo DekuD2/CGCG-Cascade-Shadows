@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:FR.CascadeShadows"
         xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="642" Width="824">
     <Grid Background="AliceBlue">
         <!--<Grid.RowDefinitions>
             <RowDefinition Height="*"/>
@@ -30,6 +30,31 @@
                             EventName="SelectionChanged">
                 <b:InvokeCommandAction Command="{Binding ChangeOutputCommand}"
                                        CommandParameter="{Binding ElementName=outputSelect, Path=SelectedIndex}"/>
+            </b:EventTrigger>
+            <b:EventTrigger SourceName="pcfSelect"
+                            EventName="SelectionChanged">
+                <b:InvokeCommandAction Command="{Binding SetPcfModeCommand}"
+                                       CommandParameter="{Binding ElementName=pcfSelect, Path=SelectedIndex}"/>
+            </b:EventTrigger>
+            <b:EventTrigger SourceName="visualiseSelect"
+                            EventName="SelectionChanged">
+                <b:InvokeCommandAction Command="{Binding SetVisualiseCommand}"
+                                       CommandParameter="{Binding ElementName=visualiseSelect, Path=SelectedIndex}"/>
+            </b:EventTrigger>
+            <b:EventTrigger SourceName="cascade1Select"
+                            EventName="SelectionChanged">
+                <b:InvokeCommandAction Command="{Binding SetCascade1Command}"
+                                       CommandParameter="{Binding ElementName=cascade1Select, Path=SelectedIndex}"/>
+            </b:EventTrigger>
+            <b:EventTrigger SourceName="cascade2Select"
+                            EventName="SelectionChanged">
+                <b:InvokeCommandAction Command="{Binding SetCascade2Command}"
+                                       CommandParameter="{Binding ElementName=cascade2Select, Path=SelectedIndex}"/>
+            </b:EventTrigger>
+            <b:EventTrigger SourceName="cascade3Select"
+                            EventName="SelectionChanged">
+                <b:InvokeCommandAction Command="{Binding SetCascade3Command}"
+                                       CommandParameter="{Binding ElementName=cascade3Select, Path=SelectedIndex}"/>
             </b:EventTrigger>
 
             <b:EventTrigger SourceName="samplerSelect"
@@ -104,6 +129,39 @@
                             EventName="Unchecked">
                 <b:InvokeCommandAction Command="{Binding ToggleOffCommand}"
                                        CommandParameter="parallax"/>
+            </b:EventTrigger>
+
+            <b:EventTrigger SourceName="blendCb"
+                            EventName="Checked">
+                <b:InvokeCommandAction Command="{Binding ToggleOnCommand}"
+                                       CommandParameter="cascadeBlend"/>
+            </b:EventTrigger>
+            <b:EventTrigger SourceName="blendCb"
+                            EventName="Unchecked">
+                <b:InvokeCommandAction Command="{Binding ToggleOffCommand}"
+                                       CommandParameter="cascadeBlend"/>
+            </b:EventTrigger>
+
+            <b:EventTrigger SourceName="depthBiasCB"
+                            EventName="Checked">
+                <b:InvokeCommandAction Command="{Binding ToggleOnCommand}"
+                                       CommandParameter="depthBias"/>
+            </b:EventTrigger>
+            <b:EventTrigger SourceName="depthBiasCB"
+                            EventName="Unchecked">
+                <b:InvokeCommandAction Command="{Binding ToggleOffCommand}"
+                                       CommandParameter="derivative"/>
+            </b:EventTrigger>
+
+            <b:EventTrigger SourceName="fitToSceneCb"
+                            EventName="Checked">
+                <b:InvokeCommandAction Command="{Binding ToggleOnCommand}"
+                                       CommandParameter="fitToScene"/>
+            </b:EventTrigger>
+            <b:EventTrigger SourceName="fitToSceneCb"
+                            EventName="Unchecked">
+                <b:InvokeCommandAction Command="{Binding ToggleOffCommand}"
+                                       CommandParameter="fitToScene"/>
             </b:EventTrigger>
         </b:Interaction.Triggers>
 
@@ -204,6 +262,81 @@
                           VerticalAlignment="Center"
                           Margin="5,-5,5,0"/>
 
+            <ToggleButton x:Name="blendCb"
+                          Content="Cascade blend"
+                          IsChecked="True"
+                          VerticalAlignment="Center"
+                          Margin="5,0,5,0"/>
+            
+            <ToggleButton x:Name="depthBiasCB"
+                          Content="Depth derivative"
+                          IsChecked="True"
+                          VerticalAlignment="Center"
+                          Margin="5,0,5,0"/>
+
+
+            <ToggleButton x:Name="fitToSceneCb"
+                          Content="Fit-to-scene"
+                          IsChecked="False"
+                          VerticalAlignment="Center"
+                          Margin="5,0,5,0"/>
+
+            <Label>Shadow filtering</Label>
+            <ComboBox x:Name="pcfSelect"
+                      Margin="5,-3,5,0"
+                      HorizontalAlignment="Stretch"
+                      VerticalContentAlignment="Center">
+                <ComboBoxItem Content="No filtering"/>
+                <ComboBoxItem Content="4x4 average"/>
+                <ComboBoxItem Content="PCF"/>
+                <ComboBoxItem Content="PCF 4x4 average"/>
+                <ComboBoxItem Content="PCF 3x3 gaussian" IsSelected="True"/>
+            </ComboBox>
+
+            <Label>Visualise cascaes</Label>
+            <ComboBox x:Name="visualiseSelect"
+                      Margin="5,-3,5,0"
+                      HorizontalAlignment="Stretch"
+                      VerticalContentAlignment="Center">
+                <ComboBoxItem Content="None" IsSelected="True"/>
+                <ComboBoxItem Content="Multiply"/>
+                <ComboBoxItem Content="Override"/>
+            </ComboBox>
+
+            <Label>Cascade resolutions</Label>
+            <ComboBox x:Name="cascade1Select"
+                      Margin="5,-3,5,0"
+                      HorizontalAlignment="Stretch"
+                      VerticalContentAlignment="Center">
+                <ComboBoxItem Content="128"/>
+                <ComboBoxItem Content="256"/>
+                <ComboBoxItem Content="512"/>
+                <ComboBoxItem Content="1024"/>
+                <ComboBoxItem Content="2048" IsSelected="True"/>
+                <ComboBoxItem Content="4096"/>
+            </ComboBox>
+            <ComboBox x:Name="cascade2Select"
+                      Margin="5,0,5,0"
+                      HorizontalAlignment="Stretch"
+                      VerticalContentAlignment="Center">
+                <ComboBoxItem Content="128"/>
+                <ComboBoxItem Content="256"/>
+                <ComboBoxItem Content="512"/>
+                <ComboBoxItem Content="1024" IsSelected="True"/>
+                <ComboBoxItem Content="2048"/>
+                <ComboBoxItem Content="4096"/>
+            </ComboBox>
+            <ComboBox x:Name="cascade3Select"
+                      Margin="5,0,5,0"
+                      HorizontalAlignment="Stretch"
+                      VerticalContentAlignment="Center">
+                <ComboBoxItem Content="128"/>
+                <ComboBoxItem Content="256"/>
+                <ComboBoxItem Content="512"/>
+                <ComboBoxItem Content="1024"/>
+                <ComboBoxItem Content="2048"/>
+                <ComboBoxItem Content="4096" IsSelected="True"/>
+            </ComboBox>
         </StackPanel>
 
         <Popup x:Name="errorPopup" IsOpen="False">

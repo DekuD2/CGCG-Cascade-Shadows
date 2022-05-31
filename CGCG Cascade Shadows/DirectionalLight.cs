@@ -13,10 +13,13 @@ namespace FR.CascadeShadows;
 /// <param name="Far">Set to float.PositiveInfinity to use camera.Far</param>
 public record CascadeDescription(float Near, float Far, int TexWidth, int TexHeight);
 
-record Cascade(Viewport Viewport, RenderingTexture Texture, CascadeDescription Description)
+record Cascade()
 {
     public float Near => Description.Near;
     public float Far => Description.Far;
+    public /*required*/ Viewport Viewport { get; set; }
+    public /*required*/ RenderingTexture Texture { get; set; }
+    public /*required*/ CascadeDescription Description { get; set; }
     public DepthStencilView? DepthStencilView => Texture.DepthStencilView;
     public ShaderResourceView? ShaderResourceView => Texture.ShaderResourceView;
 }
@@ -44,7 +47,7 @@ public partial class DirectionalLight : Light
         for (int i = 0; i < descs.Length; i++)
         {
             var (lightTexture, viewport) = CreateDepthTexture(descs[i].TexWidth, descs[i].TexHeight);
-            this.cascades[i] = new Cascade(viewport, lightTexture, descs[i]);
+            this.cascades[i] = new() { Texture = lightTexture, Viewport = viewport, Description = descs[i] };
         }
 
         int res1 = descs[0].TexHeight;
@@ -63,6 +66,25 @@ public partial class DirectionalLight : Light
             })
             .Then(Gate)
             .ThenDraw(Resources.Shaders.DirectionalLightProgram.Draw);
+    }
+
+    public void UpdateResolution(int resolution, int index)
+    {
+        cascades[index].Texture.Dispose();
+
+        var desc = cascades[index].Description with { TexHeight = resolution, TexWidth = resolution };
+
+        var (lightTexture, viewport) = CreateDepthTexture(desc.TexWidth, desc.TexHeight);
+        cascades[index].Texture = lightTexture;
+        cascades[index].Viewport = viewport;
+        cascades[index].Description = desc;
+
+        LightParams.UpdateResolution(ref LightParams, desc.TexWidth, index);
+    }
+
+    public void UpdateBoundaries(float near, float far, int index)
+    {
+        cascades[index].Description = cascades[index].Description with { Near = near, Far = far };
     }
 
     public ShaderResourceView ShaderResourceView => cascades[0].Texture.ShaderResourceView!;

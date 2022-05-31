@@ -23,22 +23,9 @@ public static class Program
     static TransitionGate PointLightGate = new();
     static TransitionGate AmbientLightGate = new();
 
-    //private const string keyBase = @"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths";
-
-    //static string? GetProgramPath(string filename)
-    //{
-    //    using RegistryKey? fileKey = Registry.LocalMachine.OpenSubKey(string.Format(@"{0}\{1}", keyBase, filename));
-    //    return fileKey?.GetValue(string.Empty)?.ToString();
-    //}
-
     [STAThread]
     public static void Main()
     {
-        // Create dual graph
-        // 1) Add event (XXX added)
-        // 2) Ignore all nodes except for geometry node
-        // 3) Replace geometry node with a new geometry node that has 
-
         Directory.SetCurrentDirectory("Resources");
 
         MainViewModel viewModel = new();
@@ -51,6 +38,8 @@ public static class Program
         var ship = ResourceCache.Get<Mesh>(@"Models\ship_02.obj");
         var ball = MeshGenerator.GenerateSphere(40, 40);
         var quad = MeshGenerator.GenerateQuad();
+        Settings settings = new();
+        settings.Set(Devices.Context3D);
 
         MeshObject shipMO = new(ship, new Resources.Shaders.ComplexProgram.Material()
         {
@@ -193,13 +182,13 @@ public static class Program
 
         DirectionalLight light = new(
             new Vector3(0.05f, -1, -0.01f),
-            Color.White, 
+            Color.White,
             0.4f,
             new CascadeDescription(0, 5, 2048, 2048),
-            new CascadeDescription(5, 20, 512, 512),
-            new CascadeDescription(20, float.PositiveInfinity, 4096, 4096)
+            new CascadeDescription(4.8f, 20, 1024, 1024),
+            new CascadeDescription(19.8f, float.PositiveInfinity, 4096, 4096)
             );
-        
+
         renderer.Lights.Add(light);
 
         //data.Position = Transform.World.TranslationVector;
@@ -231,6 +220,48 @@ public static class Program
                 viewModel.ShowError(e.Message);
             }
         };
+        viewModel.SetValue += (name, value) =>
+        {
+            if (name == "pcf")
+            {
+                if (value is int i)
+                {
+                    settings.PcfMode = i;
+                    settings.Set(Devices.Context3D);
+                }
+            }
+            else if (name == "depthBias")
+            {
+                if (value is float f)
+                {
+                    settings.DepthBias = f;
+                    settings.Set(Devices.Context3D);
+                }
+            }
+            else if (name == "visualise")
+            {
+                if (value is int i)
+                {
+                    settings.Visualise = i;
+                    settings.Set(Devices.Context3D);
+                }
+            }
+            else if (name == "cascade1")
+            {
+                if (value is int i)
+                    light.UpdateResolution(128 * (int)Math.Pow(2, i), 0);
+            }
+            else if (name == "cascade2")
+            {
+                if (value is int i)
+                    light.UpdateResolution(128 * (int)Math.Pow(2, i), 1);
+            }
+            else if (name == "cascade3")
+            {
+                if (value is int i)
+                    light.UpdateResolution(128 * (int)Math.Pow(2, i), 2);
+            }
+        };
         viewModel.Toggle += (name, show) =>
         {
             if (name == "play")
@@ -240,9 +271,36 @@ public static class Program
                 else
                     timer.Stop();
             }
+            else if (name == "cascadeBlend")
+            {
+                settings.BlendCascades = show;
+                settings.Set(Devices.Context3D);
+            }
+            else if (name == "derivative")
+            {
+                settings.Derivative = show;
+                settings.Set(Devices.Context3D);
+            }
             else if (name == "texelSnap")
             {
                 DirectionalLight.TexelSnapping = show;
+            }
+            else if (name == "fitToScene")
+            {
+                // 0 5 20 infinity
+                float[] steps = new float[] { 0, 5, 20, float.PositiveInfinity };
+                if (show)
+                {
+                    light.UpdateBoundaries(0, 5, 0);
+                    light.UpdateBoundaries(0, 20, 1);
+                    light.UpdateBoundaries(0, float.PositiveInfinity, 2);
+                }
+                else
+                {
+                    light.UpdateBoundaries(0, 5, 0);
+                    light.UpdateBoundaries(4.8f, 20, 1);
+                    light.UpdateBoundaries(19.8f, float.PositiveInfinity, 2);
+                }
             }
             else if (name == "parallax")
             {

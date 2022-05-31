@@ -23,6 +23,12 @@ public class MainViewModel : ObservableObject
     public ICommand ToggleOnCommand { get; init; }
     public ICommand ToggleOffCommand { get; init; }
     public ICommand OpenFile { get; init; }
+    public ICommand SetPcfModeCommand { get; init; }
+    public ICommand SetDepthBiasCommand { get; init; }
+    public ICommand SetVisualiseCommand { get; init; }
+    public ICommand SetCascade1Command { get; init; }
+    public ICommand SetCascade2Command { get; init; }
+    public ICommand SetCascade3Command { get; init; }
 
     public event Action<Vector3>? MoveCamera;
     public event Action<Vector2>? RotateCamera;
@@ -31,6 +37,7 @@ public class MainViewModel : ObservableObject
     public event Action<string>? ReloadShader;
     public event Action<string>? Error;
     public event Action<string, bool>? Toggle;
+    public event Action<string, object>? SetValue;
 
     readonly CancellationTokenSource loadDirectXTargetCancellationSource = new();
 
@@ -89,6 +96,35 @@ public class MainViewModel : ObservableObject
             p.Start();
         });
 
+        SetPcfModeCommand = new RelayCommand(o =>
+        {
+            SetValue?.Invoke("pcf", int.Parse(o?.ToString() ?? "0"));
+        });
+
+        SetDepthBiasCommand = new RelayCommand(o =>
+        {
+            SetValue?.Invoke("depthBias", float.Parse(o?.ToString() ?? "0"));
+        });
+
+        SetVisualiseCommand = new RelayCommand(o =>
+        {
+            SetValue?.Invoke("visualise", int.Parse(o?.ToString() ?? "0"));
+        });
+
+        SetCascade1Command = new RelayCommand(o =>
+        {
+            SetValue?.Invoke("cascade1", int.Parse(o?.ToString() ?? "0"));
+        });
+
+        SetCascade2Command = new RelayCommand(o =>
+        {
+            SetValue?.Invoke("cascade2", int.Parse(o?.ToString() ?? "0"));
+        });
+
+        SetCascade3Command = new RelayCommand(o =>
+        {
+            SetValue?.Invoke("cascade3", int.Parse(o?.ToString() ?? "0"));
+        });
     }
 
     public async Task<DirectXPresenter> GetDirectXPresenter()

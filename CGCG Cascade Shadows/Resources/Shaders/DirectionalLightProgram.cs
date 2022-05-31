@@ -10,7 +10,7 @@ namespace FR.CascadeShadows.Resources.Shaders;
 public static class DirectionalLightProgram
 {
     static PixelShader PixelShader = ResourceCache.Get<PixelShader>(@"Shaders\Ps\directionalLight.hlsl");
-    public static readonly Buffer LightBuffer = new(Devices.Device3D, 8 * 16, ResourceUsage.Dynamic, BindFlags.ConstantBuffer, CpuAccessFlags.Write, ResourceOptionFlags.None, 0);
+    public static readonly Buffer LightBuffer = new(Devices.Device3D, 9 * 16, ResourceUsage.Dynamic, BindFlags.ConstantBuffer, CpuAccessFlags.Write, ResourceOptionFlags.None, 0);
 
     public static void Recompile()
     {
@@ -28,6 +28,7 @@ public static class DirectionalLightProgram
         context.PixelShader.Set(PixelShader);
         context.PixelShader.SetConstantBuffer(0, ConstantBuffers.Camera);
         context.PixelShader.SetConstantBuffer(1, LightBuffer);
+        context.PixelShader.SetConstantBuffer(2, Settings.CBuffer);
         context.PixelShader.SetSampler(0, Sampler);
         context.PixelShader.SetSampler(1, SamplerStates.ShadowComp);
     }
@@ -89,6 +90,17 @@ public static class DirectionalLightProgram
                 @this.projection2 = Matrix.Transpose(projection);
             if (index == 2)
                 @this.projection3 = Matrix.Transpose(projection);
+        }
+
+        public void UpdateResolution(ref LightParameters @this, int res, int index)
+        {
+            @this.CastShadow = true;
+            if (index == 0)
+                @this.invRes1 = 1 / (float)res;
+            if (index == 1)
+                @this.invRes2 = 1 / (float)res;
+            if (index == 2)
+                @this.invRes3 = 1 / (float)res;
         }
 
         public void Set(DeviceContext1 context)
