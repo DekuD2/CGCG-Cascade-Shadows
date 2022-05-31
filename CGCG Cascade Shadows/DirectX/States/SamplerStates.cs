@@ -54,7 +54,7 @@ public static class SamplerStates
             AddressV = TextureAddressMode.Border,
             AddressW = TextureAddressMode.Border,
             ComparisonFunction = Comparison.Less,
-            BorderColor = new(0, 0, 0, 1),
+            BorderColor = new(1, 1, 1, 1),
             MaximumAnisotropy = 0,
             MipLodBias = 0,
             MinimumLod = 0,

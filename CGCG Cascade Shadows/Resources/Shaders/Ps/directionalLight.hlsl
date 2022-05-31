@@ -9,10 +9,6 @@ static const float di = 0.8; // diffuse intensity
 static const float si = 0.6; // specular intensity
 static const float ai = 0.2; // ambient intensity
 
-static const int VISUALISE = 0;
-static const int PCF_MODE = 3;
-static const float DEPTH_BIAS = 0.0001;
-
 cbuffer CameraBuffer : register(b0)
 {
 	float3 camera;
@@ -32,10 +28,11 @@ cbuffer LightBuffer : register(b1)
 
 cbuffer SettingsBuffer : register(b2)
 {
-	int s_visualise; // 0 = no visualisation; 1 = mult visualisation; 2 = override visualisation
-	int s_pcf_mode; // 0 = no pcf; 1 = no pcf 4x4; 2 = pcf; 3 = pcf 4x4; 4 = pcf 3x3 gaussian
-	float s_depth_bias;
-	bool s_blend_between_cascades;
+	int VISUALISE; // 0 = no visualisation; 1 = mult visualisation; 2 = override visualisation
+	int PCF_MODE; // 0 = no pcf; 1 = no pcf 4x4; 2 = pcf; 3 = pcf 4x4; 4 = pcf 3x3 gaussian
+	float DEPTH_BIAS;
+	bool BLEND_CASCADES;
+	bool DERIVATIVE;
 }
 
 Texture2D positionTexture : register(t0);
@@ -81,7 +78,7 @@ float SampleShadowOffset(int index, float2 uv, int2 offset)
 
 float SampleShadowOffsetCompare(int index, float2 uv, int2 offset, float compare)
 {
-	return sign(saturate(SampleShadowOffset(index, uv, offset) + compare));
+	return sign(saturate(SampleShadowOffset(index, uv, offset) - compare));
 }
 
 float4 Main(PsIn input) : SV_Target
@@ -169,7 +166,7 @@ float4 Main(PsIn input) : SV_Target
 				depthPercentage += SampleShadowOffsetCompare(i, shadowMapCoords + float2(x, y) * texScale, int2(0,0), compValue);
 			}
 		}
-		depthPercentage = 1 - (depthPercentage / 16.0);
+		depthPercentage /= 16.0;
 	}
 	else if (PCF_MODE == 2)
 	{
@@ -189,7 +186,20 @@ float4 Main(PsIn input) : SV_Target
 	}
 	else if (PCF_MODE == 4)
 	{
-
+		for (float x = -1; x <= 1; x += 1.0)
+		{
+			for (float y = -1; y <= 1; y += 1.0)
+			{
+				float weight = 4;
+				if (x != 0)
+					weight /= 2;
+				if (y != 0)
+					weight /= 2;
+				depthPercentage += SamplePCF(i, shadowMapCoords + float2(x, y) * inverseResolutions[i], compValue) * weight;
+				// TODO: use depth ddx/ddy here
+			}
+		}
+		depthPercentage /= 16.0;
 	}
 
 	if (!castShadow || depthPercentage > 0) // or not in shadow

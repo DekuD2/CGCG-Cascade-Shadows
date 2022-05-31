@@ -10,7 +10,7 @@ namespace FR.CascadeShadows.Resources.Shaders;
 public static class DirectionalLightProgram
 {
     static PixelShader PixelShader = ResourceCache.Get<PixelShader>(@"Shaders\Ps\directionalLight.hlsl");
-    public static readonly Buffer LightBuffer = new(Devices.Device3D, 9 * 16, ResourceUsage.Dynamic, BindFlags.ConstantBuffer, CpuAccessFlags.Write, ResourceOptionFlags.None, 0);
+    public static readonly Buffer LightBuffer = new(Devices.Device3D, 272, ResourceUsage.Dynamic, BindFlags.ConstantBuffer, CpuAccessFlags.Write, ResourceOptionFlags.None, 0);
 
     public static void Recompile()
     {
@@ -90,6 +90,8 @@ public static class DirectionalLightProgram
                 @this.projection2 = Matrix.Transpose(projection);
             if (index == 2)
                 @this.projection3 = Matrix.Transpose(projection);
+
+            int size = Utilities.SizeOf<LightParameters>();
         }
 
         public void UpdateResolution(ref LightParameters @this, int res, int index)
