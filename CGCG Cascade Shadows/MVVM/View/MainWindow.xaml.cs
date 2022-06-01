@@ -44,7 +44,20 @@ public partial class MainWindow : Window
 
     private void renderingTarget_MouseMove(object sender, MouseEventArgs e)
     {
-        if (e.LeftButton == MouseButtonState.Pressed)
+        if (zoomCb.IsChecked == true && e.LeftButton == MouseButtonState.Pressed)
+        {
+            var pos = e.GetPosition(renderingTarget);
+            if (lastMousePos != null)
+            {
+                var delta = pos - lastMousePos;
+                //var dist = (float)Math.Sqrt((float)delta.Value.X * (float)delta.Value.X + (float)delta.Value.Y * (float)delta.Value.Y);
+                var dist = (float)delta.Value.X - (float)delta.Value.Y;
+
+                viewModel.MoveCameraCommand.Execute(new Vector3(0, 0, dist * 2f * cameraForwardSpeed));
+            }
+            lastMousePos = pos;
+        }
+        if (e.LeftButton == MouseButtonState.Pressed && rotateCb.IsChecked != true)
         {
             var pos = e.GetPosition(renderingTarget);
             if (lastMousePos != null)
@@ -58,7 +71,7 @@ public partial class MainWindow : Window
             }
             lastMousePos = pos;
         }
-        else if (e.RightButton == MouseButtonState.Pressed)
+        else if (e.RightButton == MouseButtonState.Pressed || (e.LeftButton == MouseButtonState.Pressed && rotateCb.IsChecked == true))
         {
             var pos = e.GetPosition(renderingTarget);
             if (lastMousePos != null)
@@ -99,5 +112,15 @@ public partial class MainWindow : Window
     private void Button_Click(object sender, RoutedEventArgs e)
     {
         errorPopup.IsOpen = false;
+    }
+
+    private void zoomCb_Checked(object sender, RoutedEventArgs e)
+    {
+        rotateCb.IsChecked = false;
+    }
+
+    private void rotateCb_Checked(object sender, RoutedEventArgs e)
+    {
+        zoomCb.IsChecked = false;
     }
 }

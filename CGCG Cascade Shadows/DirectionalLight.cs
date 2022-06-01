@@ -32,7 +32,7 @@ public partial class DirectionalLight : Light
 
     readonly Cascade[] cascades = new Cascade[3];
 
-    public Vector3 Source { get; set; } = new(0, 100, 0);
+    public Vector3 Source { get; set; } = new(0, 180, 0);
 
     public static bool TexelSnapping = true;
 

@@ -36,6 +36,7 @@ public static class Program
         var presenter = viewModel.GetDirectXPresenter().Result;
         var renderer = new Renderer(presenter.Output);
         var ship = ResourceCache.Get<Mesh>(@"Models\ship_02.obj");
+        var astronaut = ResourceCache.Get<Mesh>(@"Models\11070_astronaut_v4.obj");
         var ball = MeshGenerator.GenerateSphere(40, 40);
         var quad = MeshGenerator.GenerateQuad();
         Settings settings = new();
@@ -51,6 +52,18 @@ public static class Program
         })
         {
             Scale = new(0.05f)
+        };
+
+        var astronautMO = new MeshObject(astronaut, new Resources.Shaders.SimpleProgram.Material()
+        {
+            Diffuse = Color.LightGray,
+            Gloss = 0.01f,
+            SpecularPower = 512f
+        })
+        {
+            Scale = new(0.1f),
+            Rotation = Quaternion.RotationYawPitchRoll(0, -MathF.PI * 0.5f, 0),
+            Position = new(-5, -5, 0)
         };
 
         var ballMO = new MeshObject(ball, new Resources.Shaders.SimpleProgram.Material()
@@ -328,15 +341,15 @@ public static class Program
         while (true)
         {
             // Scene dynamics
-            //light.LightParams.Direction.Z = (float)Math.Sin(timer.ElapsedMilliseconds / 1000f) * 0.02f;
+            light.LightParams.Direction.Z = (float)Math.Sin(timer.ElapsedMilliseconds / 1000f) * 0.6f;
             //light.LightParams.Direction.X = (float)Math.Cos(timer.ElapsedMilliseconds / 1000f) * 0.02f;
 
             //ballPos.Z = (float)Math.Sin(timer.ElapsedMilliseconds / 1400f) * 2f;
             ballMO.Position.Z = (float)Math.Sin(timer.ElapsedMilliseconds / 1400f) * 2f;
 
             //quadHeight = -5 + (float)Math.Cos(timer.ElapsedMilliseconds / 1800f) * 5f;
-            quadParallaxMO.Position.Y = -5 + (float)Math.Cos(timer.ElapsedMilliseconds / 1800f) * 5f;
-            quadBasicMO.Position.Y = -5 + (float)Math.Cos(timer.ElapsedMilliseconds / 1800f) * 5f;
+            //quadParallaxMO.Position.Y = -5 + (float)Math.Cos(timer.ElapsedMilliseconds / 1800f) * 5f;
+            //quadBasicMO.Position.Y = -5 + (float)Math.Cos(timer.ElapsedMilliseconds / 1800f) * 5f;
 
             // Render
             renderer.Render();

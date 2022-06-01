@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:FR.CascadeShadows"
         xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
         mc:Ignorable="d"
-        Title="MainWindow" Height="642" Width="824">
+        Title="MainWindow" Height="1000" Width="1600">
     <Grid Background="AliceBlue">
         <!--<Grid.RowDefinitions>
             <RowDefinition Height="*"/>
@@ -145,7 +145,7 @@
             <b:EventTrigger SourceName="depthBiasCB"
                             EventName="Checked">
                 <b:InvokeCommandAction Command="{Binding ToggleOnCommand}"
-                                       CommandParameter="depthBias"/>
+                                       CommandParameter="derivative"/>
             </b:EventTrigger>
             <b:EventTrigger SourceName="depthBiasCB"
                             EventName="Unchecked">
@@ -168,9 +168,34 @@
         <!--<Label>Hi</Label>-->
         <ContentPresenter x:Name="renderingTarget"
                           MouseMove="renderingTarget_MouseMove"
-                          MouseWheel="renderingTarget_MouseWheel"/>
+                          MouseWheel="renderingTarget_MouseWheel" Grid.ColumnSpan="3" Margin="0,0,135,0"/>
 
-        <StackPanel Grid.Column="1"
+        <StackPanel Orientation="Vertical" Margin="5,5,0,0" HorizontalAlignment="Left" VerticalAlignment="Top">
+
+            <ToggleButton x:Name="rotateCb" Width="50" Height="50" Checked="rotateCb_Checked">
+                <ToggleButton.Style>
+                    <Style TargetType="ToggleButton">
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="BorderBrush" Value="Transparent"/>
+                    </Style>
+                </ToggleButton.Style>
+                <Image Source="/Resources/Textures/rotate.png"/>
+            </ToggleButton>
+
+            <ToggleButton x:Name="zoomCb" Width="50" Height="50" Checked="zoomCb_Checked">
+                <ToggleButton.Style>
+                    <Style TargetType="ToggleButton">
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="BorderBrush" Value="Transparent"/>
+                    </Style>
+                </ToggleButton.Style>
+                <Image Source="/Resources/Textures/zoom.png"/>
+            </ToggleButton>
+        </StackPanel>
+
+        <StackPanel Grid.Column="2"
                     Orientation="Vertical">
 
             <ToggleButton x:Name="playCb"
@@ -219,29 +244,34 @@
             <Label>Directional light shader</Label>
             <StackPanel Margin="5,-3,0,5" Orientation="Horizontal" HorizontalAlignment="Stretch">
 
-                <Button Content="Reload"
-                    Command="{Binding ReloadShaderCommand}"
-                    CommandParameter="directional light"/>
+                <Button Command="{Binding ReloadShaderCommand}"
+                        CommandParameter="directional light">
+                    <Image Width="35" Source="/Resources/Textures/reload.png"/>
+                </Button>
 
-                <Button Content="Open"
-                    Command="{Binding OpenFile}"
-                    CommandParameter="Shaders\Ps\directionalLight.hlsl"/>
+                <Button Command="{Binding OpenFile}"
+                        CommandParameter="Shaders\Ps\directionalLight.hlsl">
+                    <Image Width="35" Source="/Resources/Textures/vscode.png"/>
+                </Button>
             </StackPanel>
 
             <Label>Parallax shader</Label>
             <StackPanel Margin="5,-3,0,5" Orientation="Horizontal" HorizontalAlignment="Stretch">
 
-                <Button Content="Reload"
-                    Command="{Binding ReloadShaderCommand}"
-                    CommandParameter="parallax"/>
+                <Button Command="{Binding ReloadShaderCommand}"
+                        CommandParameter="parallax">
+                    <Image Width="35" Source="/Resources/Textures/reload.png"/>
+                </Button>
 
-                <Button Content="Open"
-                    Command="{Binding OpenFile}"
-                    CommandParameter="Shaders\Ps\parallax.hlsl"/>
+                <Button Command="{Binding OpenFile}"
+                        CommandParameter="Shaders\Ps\parallax.hlsl">
+                    <Image Width="35" Source="/Resources/Textures/vscode.png"/>
+                </Button>
 
                 <ToggleButton x:Name="showParallaxCb"
-                          Content="Show"
-                          IsChecked="True"/>
+                              IsChecked="True">
+                    <Image Width="35" Source="/Resources/Textures/eye.png"/>
+                </ToggleButton>
 
             </StackPanel>
 
@@ -267,7 +297,7 @@
                           IsChecked="True"
                           VerticalAlignment="Center"
                           Margin="5,0,5,0"/>
-            
+
             <ToggleButton x:Name="depthBiasCB"
                           Content="Depth derivative"
                           IsChecked="True"
@@ -339,7 +369,7 @@
             </ComboBox>
         </StackPanel>
 
-        <Popup x:Name="errorPopup" IsOpen="False">
+        <Popup x:Name="errorPopup" IsOpen="False" Grid.ColumnSpan="3" Margin="0,0,135,0">
             <DockPanel MinWidth="600" Background="Red">
                 <TextBox x:Name="errorPopupMessage" 
                          DockPanel.Dock="Top" 

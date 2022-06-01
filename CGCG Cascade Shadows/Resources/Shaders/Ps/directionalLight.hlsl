@@ -92,9 +92,10 @@ float4 Main(PsIn input) : SV_Target
 	float alpha = alphaTexture.Sample(texSampler, input.uv).r;
 
 	float4 lightSpacePos;
-	float2 shadowMapCoords;
+	float3 shadowMapCoords;
 	float lightSpaceDepth;
 	float texScale;
+	float2 shadowDepthGradient = float2(0,0);
 
 	// Find the currect cascade index
 	int i;
@@ -104,8 +105,9 @@ float4 Main(PsIn input) : SV_Target
 		lightSpacePos = mul(float4(position, 1), projections[i]);
 
 		// from [-1,1] space to [0,1] space (+ divide by w)
-		shadowMapCoords = float2(0.5 + (lightSpacePos.x / lightSpacePos.w * 0.5),
-								 0.5 - (lightSpacePos.y / lightSpacePos.w * 0.5));
+		shadowMapCoords = float3(0.5 + (lightSpacePos.x / lightSpacePos.w * 0.5),
+								0.5 - (lightSpacePos.y / lightSpacePos.w * 0.5),
+								0);
 
 
 		// If we are outside of the cascade, try the next one
@@ -115,7 +117,7 @@ float4 Main(PsIn input) : SV_Target
 			// Unless it's the last cascade in which case we assume shadow
 			if (i == 3)
 			{
-				return float4(0, 0, 0, 0);
+				break;
 			}
 
 			continue;
@@ -123,18 +125,10 @@ float4 Main(PsIn input) : SV_Target
 
 		// If we got here, we found our cascade
 
-		if (VISUALISE == 2)
-		{
-			if (i == 0)
-				return float4(0.5, 0, 0, 1);
-			else if (i == 1)
-				return float4(0, 0.5, 0, 1);
-			else
-				return float4(0, 0, 0.5, 1);
-		}
-
 		// calculate the depth from the POV of light
-		lightSpaceDepth = (lightSpacePos.z / lightSpacePos.w);
+
+		lightSpaceDepth = shadowMapCoords.z = (lightSpacePos.z / lightSpacePos.w);
+
 		// get our textureScale for PCF kernels
 		texScale = inverseResolutions[i];
 
@@ -149,13 +143,57 @@ float4 Main(PsIn input) : SV_Target
 		break;
 	}
 
+	if (VISUALISE == 2)
+	{
+		if (i == 0)
+			return float4(0.5, 0, 0, 1);
+		else if (i == 1)
+			return float4(0, 0.5, 0, 1);
+		else if (i == 2)
+			return float4(0, 0, 0.5, 1);
+		else
+			return float4(0.3, 0.2, 0.35, 1);
+	}
+
+	// Not found cascade
+	if (i == 3)
+	{
+		return float4(0, 0, 0, 0);
+	}
+
+	if (DERIVATIVE)
+	{
+		// If we move up/right on the screen, lightSpaceDepth will change by this amount
+		float3 shadowMapCoordsDdx = ddx(shadowMapCoords);
+		float3 shadowMapCoordsDdy = ddy(shadowMapCoords);
+
+		float2x2 screenToShadow = float2x2(shadowMapCoordsDdx.xy, shadowMapCoordsDdy.xy);
+
+		// invert
+		float inverseDet = 1.0 / determinant(screenToShadow);
+		float2x2 shadowToScreen = float2x2(
+			screenToShadow._22 * inverseDet,
+			screenToShadow._12 * -inverseDet,
+			screenToShadow._21 * -inverseDet,
+			screenToShadow._11 * inverseDet);
+
+		float2 shadowRightDir = mul(float2(texScale, 0.0), shadowToScreen);
+		float2 shadowUpDir = mul(float2(0.0, texScale), shadowToScreen);
+
+		float2 shadowDepthDelta = float2(shadowMapCoordsDdx.z, shadowMapCoordsDdy.z);
+
+		shadowDepthGradient = float2(
+			dot(shadowRightDir, shadowDepthDelta),
+			dot(shadowUpDir, shadowDepthDelta));
+	}
+
 	float depthPercentage = 0.0;
 	float compValue = lightSpaceDepth - DEPTH_BIAS;
 
 	// Calculate depth percentage using our selected PCF mode
 	if (PCF_MODE == 0)
 	{
-		depthPercentage = SampleShadowOffsetCompare(i, shadowMapCoords, int2(0,0), compValue);
+		depthPercentage = SampleShadowOffsetCompare(i, shadowMapCoords.xy, int2(0,0), compValue);
 	}
 	else if (PCF_MODE == 1)
 	{
@@ -163,14 +201,14 @@ float4 Main(PsIn input) : SV_Target
 		{
 			for (float y = -1.5; y <= 1.55; y += 1.0)
 			{
-				depthPercentage += SampleShadowOffsetCompare(i, shadowMapCoords + float2(x, y) * texScale, int2(0,0), compValue);
+				depthPercentage += SampleShadowOffsetCompare(i, shadowMapCoords.xy + float2(x, y) * texScale, int2(0,0), compValue);
 			}
 		}
 		depthPercentage /= 16.0;
 	}
 	else if (PCF_MODE == 2)
 	{
-		depthPercentage = SamplePCF(i, shadowMapCoords, compValue);
+		depthPercentage = SamplePCF(i, shadowMapCoords.xy, compValue);
 	}
 	else if (PCF_MODE == 3)
 	{
@@ -178,7 +216,13 @@ float4 Main(PsIn input) : SV_Target
 		{
 			for (float y = -1.5; y <= 1.55; y += 1.0)
 			{
-				depthPercentage += SamplePCF(i, shadowMapCoords + float2(x, y) * inverseResolutions[i], compValue);
+				float depthDelta = 0;
+				if (DERIVATIVE)
+				{
+					depthDelta = dot(float2(x, y), shadowDepthGradient);
+				}
+
+				depthPercentage += SamplePCF(i, shadowMapCoords.xy + float2(x, y) * inverseResolutions[i], compValue + depthDelta);
 				// TODO: use depth ddx/ddy here
 			}
 		}
@@ -195,7 +239,14 @@ float4 Main(PsIn input) : SV_Target
 					weight /= 2;
 				if (y != 0)
 					weight /= 2;
-				depthPercentage += SamplePCF(i, shadowMapCoords + float2(x, y) * inverseResolutions[i], compValue) * weight;
+
+				float depthDelta = 0;
+				if (DERIVATIVE)
+				{
+					depthDelta = dot(float2(x, y), shadowDepthGradient);
+				}
+
+				depthPercentage += SamplePCF(i, shadowMapCoords.xy + float2(x, y) * inverseResolutions[i], compValue + depthDelta) * weight;
 				// TODO: use depth ddx/ddy here
 			}
 		}

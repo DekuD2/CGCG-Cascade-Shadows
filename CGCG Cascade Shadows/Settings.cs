@@ -1,4 +1,5 @@
-﻿using SharpDX.Direct3D11;
+﻿using SharpDX;
+using SharpDX.Direct3D11;
 
 using System.Runtime.InteropServices;
 
@@ -17,10 +18,13 @@ public struct Settings
             0);
 
     public int Visualise = 0;
-    public int PcfMode = 3;
-    public float DepthBias = 0.0001f;
+    public int PcfMode = 4;
+    public float DepthBias = 0.001f;
     public bool BlendCascades = true;
-    public bool Derivative = true;
+    private byte _p0 = 0;
+    private byte _p1 = 0;
+    private byte _p2 = 0;
+    public bool Derivative = true;  
 
     public Settings() { }
 

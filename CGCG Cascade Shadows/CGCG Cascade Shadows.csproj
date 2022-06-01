@@ -11,6 +11,20 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\Textures\eye.png" />
+    <None Remove="Resources\Textures\reload.png" />
+    <None Remove="Resources\Textures\rotate.png" />
+    <None Remove="Resources\Textures\vscode.png" />
+    <None Remove="Resources\Textures\zoom.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\Textures\eye.png" />
+    <Resource Include="Resources\Textures\reload.png" />
+    <Resource Include="Resources\Textures\vscode.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AssimpNet" Version="5.0.0-beta1" />
     <PackageReference Include="Microsoft.Wpf.Interop.DirectX-x64" Version="0.9.0-beta-22856" />
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.39" />
@@ -38,6 +52,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Resources\Models\11070_astronaut_v4.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Resources\Models\Ship\ship_glossy_l.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -135,6 +152,11 @@
 
   <ItemGroup>
     <Folder Include="Rendering\Objects\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\Textures\rotate.png" />
+    <Resource Include="Resources\Textures\zoom.png" />
   </ItemGroup>
 
 </Project>

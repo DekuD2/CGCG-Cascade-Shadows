@@ -50,9 +50,9 @@ public static class SamplerStates
         => new()
         {
             Filter = Filter.ComparisonMinMagMipLinear,
-            AddressU = TextureAddressMode.Border,
-            AddressV = TextureAddressMode.Border,
-            AddressW = TextureAddressMode.Border,
+            AddressU = TextureAddressMode.Clamp,
+            AddressV = TextureAddressMode.Clamp,
+            AddressW = TextureAddressMode.Clamp,
             ComparisonFunction = Comparison.Less,
             BorderColor = new(1, 1, 1, 1),
             MaximumAnisotropy = 0,
