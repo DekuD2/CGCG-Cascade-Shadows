@@ -112,6 +112,7 @@ PsOut Main(PsIn input)
 	output.albedo = diffuseTexture.Sample(texSampler, uv).rgb; // * matDiffuse;
 
 	float3 n = normalTexture.Sample(texSampler, uv).rgb;
+	n.xy = n.yx;
 	n.xy = n.xy * 2.0 - 1.0;
 	output.normal = normalize(mul(n, tbn));
 
@@ -120,9 +121,9 @@ PsOut Main(PsIn input)
 	// output.gloss = glossyTexture.Sample(texSampler, uv).r;
 
 	// TESTING
-	float d = depthTexture.Sample(texSampler, input.uv).r;
+	//float d = depthTexture.Sample(texSampler, input.uv).r;
 	//output.albedo = float3(d, d, d);
-	output.normal = float3(0, 1, 0);
+	//output.normal = float3(0, 1, 0);
 
 	return output;
 }

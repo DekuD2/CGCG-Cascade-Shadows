@@ -189,7 +189,7 @@ public static class Program
 
         var pointLightInstr = DeferredPipeline.LightPass
             .Set(Resources.Shaders.PointLightProgram.Set)
-            .Then(new Resources.Shaders.PointLightProgram.LightParameters(new Vector3(8, 2, 1), Color.Orange, c3: 0.05f).Set)
+            .Then(new Resources.Shaders.PointLightProgram.LightParameters(new Vector3(8, 3, 2), Color.Orange, c3: 0.25f).Set)
             .Then(PointLightGate)
             .ThenDraw(Resources.Shaders.PointLightProgram.Draw);
 
@@ -198,8 +198,8 @@ public static class Program
             Color.White,
             0.4f,
             new CascadeDescription(0, 5, 2048, 2048),
-            new CascadeDescription(4.8f, 20, 1024, 1024),
-            new CascadeDescription(19.8f, float.PositiveInfinity, 4096, 4096)
+            new CascadeDescription(4.8f, 16, 1024, 1024),
+            new CascadeDescription(15.8f, float.PositiveInfinity, 4096, 4096)
             );
 
         renderer.Lights.Add(light);
@@ -210,7 +210,6 @@ public static class Program
 
         int outputIdx = 0;
 
-        Stopwatch stopwatch = new();
         var timer = Stopwatch.StartNew();
 
         #region setup window interactions
@@ -301,18 +300,18 @@ public static class Program
             else if (name == "fitToScene")
             {
                 // 0 5 20 infinity
-                float[] steps = new float[] { 0, 5, 20, float.PositiveInfinity };
+                //float[] steps = new float[] { 0, 5, 16, float.PositiveInfinity };
                 if (show)
                 {
                     light.UpdateBoundaries(0, 5, 0);
-                    light.UpdateBoundaries(0, 20, 1);
+                    light.UpdateBoundaries(0, 16, 1);
                     light.UpdateBoundaries(0, float.PositiveInfinity, 2);
                 }
                 else
                 {
                     light.UpdateBoundaries(0, 5, 0);
-                    light.UpdateBoundaries(4.8f, 20, 1);
-                    light.UpdateBoundaries(19.8f, float.PositiveInfinity, 2);
+                    light.UpdateBoundaries(4.8f, 16, 1);
+                    light.UpdateBoundaries(15.8f, float.PositiveInfinity, 2);
                 }
             }
             else if (name == "parallax")
@@ -334,13 +333,14 @@ public static class Program
         };
         #endregion
 
-        Queue<TimeSpan> snapshots = new(Enumerable.Repeat(TimeSpan.Zero, 60));
+        int frames = 0;
+        var stopwatch = Stopwatch.StartNew();
         //int framesInASecond
 
         while (true)
         {
             // Scene dynamics
-            light.LightParams.Direction.Z = (float)Math.Sin(timer.ElapsedMilliseconds / 1000f) * 0.6f;
+            light.LightParams.Direction.Z = (float)Math.Sin(timer.ElapsedMilliseconds / 1000f) * 0.45f;
             //light.LightParams.Direction.X = (float)Math.Cos(timer.ElapsedMilliseconds / 1000f) * 0.02f;
 
             //ballPos.Z = (float)Math.Sin(timer.ElapsedMilliseconds / 1400f) * 2f;
@@ -349,7 +349,7 @@ public static class Program
             //quadHeight = -5 + (float)Math.Cos(timer.ElapsedMilliseconds / 1800f) * 5f;
             //quadParallaxMO.Position.Y = -5 + (float)Math.Cos(timer.ElapsedMilliseconds / 1800f) * 5f;
             //quadBasicMO.Position.Y = -5 + (float)Math.Cos(timer.ElapsedMilliseconds / 1800f) * 5f;
-            shipMO.Position.Y = 5 + (float)Math.Cos(timer.ElapsedMilliseconds / 800f) * 4.8f;
+            shipMO.Position.Y = -1 + (float)Math.Cos(timer.ElapsedMilliseconds / 800f) * 2.8f;
 
             // Render
             renderer.Render();
@@ -393,6 +393,14 @@ public static class Program
             // Other
             WpfDispatcher.ProcessMessages();
             presenter.Present();
+
+            frames++;
+            if(stopwatch.ElapsedMilliseconds >= 1000)
+            {
+                System.Diagnostics.Debug.WriteLine(frames);
+                frames = 0;
+                stopwatch.Restart();
+            }
         }
     }
 
