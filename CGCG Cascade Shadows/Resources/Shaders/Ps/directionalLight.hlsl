@@ -8,6 +8,7 @@
 static const float di = 0.8; // diffuse intensity
 static const float si = 0.6; // specular intensity
 static const float ai = 0.2; // ambient intensity
+static const float edge = 0.1;
 
 cbuffer CameraBuffer : register(b0)
 {
@@ -81,6 +82,111 @@ float SampleShadowOffsetCompare(int index, float2 uv, int2 offset, float compare
 	return sign(saturate(SampleShadowOffset(index, uv, offset) - compare));
 }
 
+float DepthPercentage(int i, float3 shadowMapCoords, float compValue)
+{
+	float depthPercentage = 0;
+	float2 shadowDepthGradient = float2(0, 0);
+
+	float texScale = inverseResolutions[i];
+
+	if (DERIVATIVE)
+	{
+		// If we move up/right on the screen, lightSpaceDepth will change by this amount
+		float3 shadowMapCoordsDdx = ddx(shadowMapCoords);
+		float3 shadowMapCoordsDdy = ddy(shadowMapCoords);
+
+		float2x2 screenToShadow = float2x2(shadowMapCoordsDdx.xy, shadowMapCoordsDdy.xy);
+
+		// invert
+		float inverseDet = 1.0 / determinant(screenToShadow);
+		float2x2 shadowToScreen = float2x2(
+			screenToShadow._22 * inverseDet,
+			screenToShadow._12 * -inverseDet,
+			screenToShadow._21 * -inverseDet,
+			screenToShadow._11 * inverseDet);
+
+		float2 shadowRightDir = mul(float2(texScale, 0.0), shadowToScreen);
+		float2 shadowUpDir = mul(float2(0.0, texScale), shadowToScreen);
+
+		float2 shadowDepthDelta = float2(shadowMapCoordsDdx.z, shadowMapCoordsDdy.z);
+
+		shadowDepthGradient = float2(
+			dot(shadowRightDir, shadowDepthDelta),
+			dot(shadowUpDir, shadowDepthDelta));
+	}
+
+	// Calculate depth percentage using our selected PCF mode
+	if (PCF_MODE == 0)
+	{
+		depthPercentage = SampleShadowOffsetCompare(i, shadowMapCoords.xy, int2(0, 0), compValue);
+	}
+	else if (PCF_MODE == 1)
+	{
+		for (float x = -1.5; x <= 1.55; x += 1.0)
+		{
+			for (float y = -1.5; y <= 1.55; y += 1.0)
+			{
+				depthPercentage += SampleShadowOffsetCompare(i, shadowMapCoords.xy + float2(x, y) * texScale, int2(0, 0), compValue);
+			}
+		}
+		depthPercentage /= 16.0;
+	}
+	else if (PCF_MODE == 2)
+	{
+		depthPercentage = SamplePCF(i, shadowMapCoords.xy, compValue);
+	}
+	else if (PCF_MODE == 3)
+	{
+		for (float x = -1.5; x <= 1.55; x += 1.0)
+		{
+			for (float y = -1.5; y <= 1.55; y += 1.0)
+			{
+				float depthDelta = 0;
+				if (DERIVATIVE)
+				{
+					depthDelta = dot(float2(x, y), shadowDepthGradient);
+					// quick fix for edges
+					if (isnan(depthDelta))
+						depthDelta = float2(0, 0);
+				}
+
+				depthPercentage += SamplePCF(i, shadowMapCoords.xy + float2(x, y) * inverseResolutions[i], compValue + depthDelta);
+				// TODO: use depth ddx/ddy here
+			}
+		}
+		depthPercentage /= 16.0;
+	}
+	else if (PCF_MODE == 4)
+	{
+		for (float x = -1; x <= 1; x += 1.0)
+		{
+			for (float y = -1; y <= 1; y += 1.0)
+			{
+				float weight = 4;
+				if (x != 0)
+					weight /= 2;
+				if (y != 0)
+					weight /= 2;
+
+				float depthDelta = 0;
+				if (DERIVATIVE)
+				{
+					depthDelta = dot(float2(x, y), shadowDepthGradient);
+					// quick fix for edges
+					if (isnan(depthDelta))
+						depthDelta = float2(0, 0);
+				}
+
+				depthPercentage += SamplePCF(i, shadowMapCoords.xy + float2(x, y) * inverseResolutions[i], compValue + depthDelta) * weight;
+				// TODO: use depth ddx/ddy here
+			}
+		}
+		depthPercentage /= 16.0;
+	}
+
+	return  depthPercentage;
+}
+
 float4 Main(PsIn input) : SV_Target
 {
 	// Get surface data
@@ -93,7 +199,6 @@ float4 Main(PsIn input) : SV_Target
 
 	float4 lightSpacePos;
 	float3 shadowMapCoords;
-	float lightSpaceDepth;
 	float texScale;
 	float2 shadowDepthGradient = float2(0,0);
 
@@ -127,7 +232,7 @@ float4 Main(PsIn input) : SV_Target
 
 		// calculate the depth from the POV of light
 
-		lightSpaceDepth = shadowMapCoords.z = (lightSpacePos.z / lightSpacePos.w);
+		shadowMapCoords.z = (lightSpacePos.z / lightSpacePos.w);
 
 		// get our textureScale for PCF kernels
 		texScale = inverseResolutions[i];
@@ -135,7 +240,7 @@ float4 Main(PsIn input) : SV_Target
 		// TODO: here calculate blend% and stuff
 
 		// I don't remember this, I think it might be unnecessary
-		if (lightSpaceDepth < 0)
+		if (shadowMapCoords.z < 0)
 		{
 			return float4(0, 0, 0, 0);
 		}
@@ -155,102 +260,50 @@ float4 Main(PsIn input) : SV_Target
 			return float4(0.3, 0.2, 0.35, 1);
 	}
 
+	float depthPercentage = 0.0;
+	float compValue = shadowMapCoords.z - DEPTH_BIAS;
+
 	// Not found cascade
 	if (i == 3)
 	{
-		return float4(0, 0, 0, 0);
+		depthPercentage = 1;
 	}
-
-	if (DERIVATIVE)
+	else
 	{
-		// If we move up/right on the screen, lightSpaceDepth will change by this amount
-		float3 shadowMapCoordsDdx = ddx(shadowMapCoords);
-		float3 shadowMapCoordsDdy = ddy(shadowMapCoords);
+		// depthPercentage = DepthPercentage(i, shadowMapCoords, compValue);
 
-		float2x2 screenToShadow = float2x2(shadowMapCoordsDdx.xy, shadowMapCoordsDdy.xy);
+		float2 dist = shadowMapCoords.xy;
+		if (dist.x > 0.5)
+			dist.x = 1 - dist.x;
+		if (dist.y > 0.5)
+			dist.y = 1 - dist.y;
+		float m = min(dist.x, dist.y);
 
-		// invert
-		float inverseDet = 1.0 / determinant(screenToShadow);
-		float2x2 shadowToScreen = float2x2(
-			screenToShadow._22 * inverseDet,
-			screenToShadow._12 * -inverseDet,
-			screenToShadow._21 * -inverseDet,
-			screenToShadow._11 * inverseDet);
+		float this = DepthPercentage(i, shadowMapCoords, compValue);
+		float next = 0;
+		float weight = 0;
 
-		float2 shadowRightDir = mul(float2(texScale, 0.0), shadowToScreen);
-		float2 shadowUpDir = mul(float2(0.0, texScale), shadowToScreen);
-
-		float2 shadowDepthDelta = float2(shadowMapCoordsDdx.z, shadowMapCoordsDdy.z);
-
-		shadowDepthGradient = float2(
-			dot(shadowRightDir, shadowDepthDelta),
-			dot(shadowUpDir, shadowDepthDelta));
-	}
-
-	float depthPercentage = 0.0;
-	float compValue = lightSpaceDepth - DEPTH_BIAS;
-
-	// Calculate depth percentage using our selected PCF mode
-	if (PCF_MODE == 0)
-	{
-		depthPercentage = SampleShadowOffsetCompare(i, shadowMapCoords.xy, int2(0,0), compValue);
-	}
-	else if (PCF_MODE == 1)
-	{
-		for (float x = -1.5; x <= 1.55; x += 1.0)
+		if (m < edge && BLEND_CASCADES)
 		{
-			for (float y = -1.5; y <= 1.55; y += 1.0)
+			// world position -> position from the light space
+			lightSpacePos = mul(float4(position, 1), projections[i + 1]);
+
+			// from [-1,1] space to [0,1] space (+ divide by w)
+			shadowMapCoords = float3(0.5 + (lightSpacePos.x / lightSpacePos.w * 0.5),
+									0.5 - (lightSpacePos.y / lightSpacePos.w * 0.5),
+									lightSpacePos.z / lightSpacePos.w);
+
+
+			// If we are outside of the cascade, try the next one
+			if (shadowMapCoords.x == saturate(shadowMapCoords.x)
+				&& shadowMapCoords.y == saturate(shadowMapCoords.y))
 			{
-				depthPercentage += SampleShadowOffsetCompare(i, shadowMapCoords.xy + float2(x, y) * texScale, int2(0,0), compValue);
+				next = DepthPercentage(i + 1, shadowMapCoords, compValue);
+				weight = (edge - m) / edge;
 			}
 		}
-		depthPercentage /= 16.0;
-	}
-	else if (PCF_MODE == 2)
-	{
-		depthPercentage = SamplePCF(i, shadowMapCoords.xy, compValue);
-	}
-	else if (PCF_MODE == 3)
-	{
-		for (float x = -1.5; x <= 1.55; x += 1.0)
-		{
-			for (float y = -1.5; y <= 1.55; y += 1.0)
-			{
-				float depthDelta = 0;
-				if (DERIVATIVE)
-				{
-					depthDelta = dot(float2(x, y), shadowDepthGradient);
-				}
 
-				depthPercentage += SamplePCF(i, shadowMapCoords.xy + float2(x, y) * inverseResolutions[i], compValue + depthDelta);
-				// TODO: use depth ddx/ddy here
-			}
-		}
-		depthPercentage /= 16.0;
-	}
-	else if (PCF_MODE == 4)
-	{
-		for (float x = -1; x <= 1; x += 1.0)
-		{
-			for (float y = -1; y <= 1; y += 1.0)
-			{
-				float weight = 4;
-				if (x != 0)
-					weight /= 2;
-				if (y != 0)
-					weight /= 2;
-
-				float depthDelta = 0;
-				if (DERIVATIVE)
-				{
-					depthDelta = dot(float2(x, y), shadowDepthGradient);
-				}
-
-				depthPercentage += SamplePCF(i, shadowMapCoords.xy + float2(x, y) * inverseResolutions[i], compValue + depthDelta) * weight;
-				// TODO: use depth ddx/ddy here
-			}
-		}
-		depthPercentage /= 16.0;
+		depthPercentage = lerp(this, next, weight);
 	}
 
 	if (!castShadow || depthPercentage > 0) // or not in shadow

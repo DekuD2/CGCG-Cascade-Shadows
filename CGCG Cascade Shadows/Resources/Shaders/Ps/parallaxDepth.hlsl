@@ -68,7 +68,7 @@ PsOut Main(PsIn input)
 	if (parallax.x != saturate(parallax.x) || parallax.y != saturate(parallax.y))
 		discard;
 
-	output.depth = input.position.z + parallax.z;
+	output.depth = input.position.z + abs(parallax.z);
 
 	return output;
 }

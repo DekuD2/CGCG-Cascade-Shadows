@@ -210,7 +210,7 @@
                       HorizontalAlignment="Stretch"
                       VerticalContentAlignment="Center">
                 <ComboBoxItem Content="Output" IsSelected="True"/>
-                <ComboBoxItem Content="GBuffer world position"/>
+                <ComboBoxItem Content="GBuffer worldpos"/>
                 <ComboBoxItem Content="GBuffer albedo"/>
                 <ComboBoxItem Content="GBuffer normal"/>
                 <ComboBoxItem Content="GBuffer emission"/>

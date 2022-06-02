@@ -189,7 +189,7 @@ public static class Program
 
         var pointLightInstr = DeferredPipeline.LightPass
             .Set(Resources.Shaders.PointLightProgram.Set)
-            .Then(new Resources.Shaders.PointLightProgram.LightParameters(new Vector3(4, 2, 1), Color.Orange, c3: 0.05f).Set)
+            .Then(new Resources.Shaders.PointLightProgram.LightParameters(new Vector3(8, 2, 1), Color.Orange, c3: 0.05f).Set)
             .Then(PointLightGate)
             .ThenDraw(Resources.Shaders.PointLightProgram.Draw);
 
@@ -337,7 +337,6 @@ public static class Program
         Queue<TimeSpan> snapshots = new(Enumerable.Repeat(TimeSpan.Zero, 60));
         //int framesInASecond
 
-
         while (true)
         {
             // Scene dynamics
@@ -350,6 +349,7 @@ public static class Program
             //quadHeight = -5 + (float)Math.Cos(timer.ElapsedMilliseconds / 1800f) * 5f;
             //quadParallaxMO.Position.Y = -5 + (float)Math.Cos(timer.ElapsedMilliseconds / 1800f) * 5f;
             //quadBasicMO.Position.Y = -5 + (float)Math.Cos(timer.ElapsedMilliseconds / 1800f) * 5f;
+            shipMO.Position.Y = 5 + (float)Math.Cos(timer.ElapsedMilliseconds / 800f) * 4.8f;
 
             // Render
             renderer.Render();
