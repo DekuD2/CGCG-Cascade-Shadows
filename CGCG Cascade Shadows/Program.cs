@@ -33,7 +33,7 @@ public static class Program
 
         window.Show();
 
-        var presenter = viewModel.GetDirectXPresenter().Result;
+        var presenter = viewModel.GetDirectXPresenter().Result;  
         var renderer = new Renderer(presenter.Output);
         var ship = ResourceCache.Get<Mesh>(@"Models\ship_02.obj");
         var astronaut = ResourceCache.Get<Mesh>(@"Models\11070_astronaut_v4.obj");
